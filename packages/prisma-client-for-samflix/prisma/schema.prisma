@@ -1,0 +1,135 @@
+// This is your Prisma schema file
+
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../prisma/generated"
+  binaryTargets = ["native", "windows", "debian-openssl-1.1.x", "debian-openssl-3.0.x", "linux-musl", "linux-arm64-openssl-1.1.x", "linux-arm64-openssl-3.0.x", "darwin-arm64"]
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Movie {
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  tmdbId          Int             @unique
+  title           String
+  year            Int
+  filePath        String
+  fileName        String
+  resolution      String?
+  quality         String?
+  rip             String?
+  sound           String?
+  provider        String?
+  overview        String?
+  posterPath      String?
+  backdropPath    String?
+  genres          String[]
+  runtime         Int?
+  rating          Float?
+  releaseDate     DateTime
+  transcodeStatus TranscodeStatus @default(PENDING)
+  playPath        String          @default("")
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model TvSeries {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  tmdbId       Int       @unique
+  title        String
+  overview     String?
+  posterPath   String?
+  backdropPath String?
+  genres       String[]
+  firstAirDate DateTime?
+  lastAirDate  DateTime?
+  status       String?
+  episodes     Episode[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  transcodeStatus TranscodeStatus @default(PENDING)
+}
+
+model Episode {
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  tmdbId          Int
+  seasonNumber    Int
+  episodeNumber   Int
+  title           String
+  overview        String?
+  filePath        String
+  fileName        String
+  resolution      String?
+  quality         String?
+  rip             String?
+  sound           String?
+  provider        String?
+  airDate         DateTime?
+  series          TvSeries        @relation(fields: [seriesId], references: [id])
+  seriesId        String          @db.ObjectId
+  transcodeStatus TranscodeStatus @default(PENDING)
+  playPath        String          @default("")
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@unique([tmdbId, seasonNumber, episodeNumber], name: "episode_identifier")
+}
+
+model MediaFolder {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  path      String   @unique
+  type      String // "movies" or "series"
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ScanningConflict {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  fileName        String
+  filePath        String
+  mediaType       String // "movie" or "series"
+  possibleMatches Json // Array of TMDB matches
+  resolved        Boolean  @default(false)
+  selectedId      Int? // Selected TMDB ID after resolution
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model User {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  clerkId   String     @unique // Clerk user ID (user.id)
+  email     String     @unique
+  name      String?
+  imageUrl  String?
+  role      Role       @default(USER)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  userStats UserStats?
+}
+
+model UserStats {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String   @unique @db.ObjectId
+  totalPlayTime Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  TESTER
+  USER
+}
+
+enum TranscodeStatus {
+  PENDING
+  IN_PROGRESS
+  QUEUED
+  COMPLETED
+  FAILED
+}
