@@ -1,0 +1,20 @@
+name: Deploy to Home Server
+
+on:
+  push:
+    branches:
+      - main  # or your default branch name
+
+env:
+  APP_DIR: /home/${{ secrets.HOME_SERVER_USERNAME }}/samflix-backend  # Your actual application directory
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Deploy to Home Server
+        run: |
+          cd ${{ env.APP_DIR }}
+          git pull
+          docker-compose down --rmi local
+          docker-compose up -d --build

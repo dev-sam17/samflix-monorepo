@@ -1,0 +1,41 @@
+{
+  "name": "samflix-backend",
+  "version": "1.0.0",
+  "description": "Backend service for Samflix media server",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "cross-env NODE_ENV=production node dist/app.js",
+    "dev": "cross-env NODE_ENV=development nodemon --exec ts-node src/app.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@clerk/express": "^1.7.1",
+    "@dev-sam17/prisma-client-for-samflix": "^0.1.8",
+    "@types/express": "^5.0.2",
+    "@types/ioredis": "^5.0.0",
+    "@types/node": "^22.15.23",
+    "axios": "^1.9.0",
+    "chokidar": "^4.0.3",
+    "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "ioredis": "^5.6.1",
+    "morgan": "^1.10.0",
+    "node-cron": "^4.0.7",
+    "typescript": "^5.8.3",
+    "zod": "^4.0.14"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.18",
+    "@types/morgan": "^1.9.9",
+    "@types/node-cron": "^3.0.11",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2"
+  },
+  "packageManager": "pnpm@10.13.1+sha512.37ebf1a5c7a30d5fabe0c5df44ee8da4c965ca0c5af3dbab28c3a1681b70a256218d05c81c9c0dcf767ef6b8551eb5b960042b9ed4300c59242336377e01cfad"
+}

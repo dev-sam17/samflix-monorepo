@@ -1,0 +1,380 @@
+{
+  "info": {
+    "name": "Samflix API",
+    "description": "API collection for Samflix backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Movies",
+      "item": [
+        {
+          "name": "Get All Movies",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/movies",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "movies"]
+            }
+          }
+        },
+        {
+          "name": "Get Movie by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/movies/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "movies", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Movie ID"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Movies",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/movies/search?query={{searchQuery}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "movies", "search"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "{{searchQuery}}",
+                  "description": "Search query for movies"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Movies by Genre",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/movies/genre/:genre",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "movies", "genre", ":genre"],
+              "variable": [
+                {
+                  "key": "genre",
+                  "value": "",
+                  "description": "Genre name"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Movie Genres",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/movies/genres",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "movies", "genres"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "TV Series",
+      "item": [
+        {
+          "name": "Get All Series",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/series",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "series"]
+            }
+          }
+        },
+        {
+          "name": "Get Series by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/series/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "series", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Series ID"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Series",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/series/search?query={{searchQuery}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "series", "search"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "{{searchQuery}}",
+                  "description": "Search query for series"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Episodes by Season",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/series/:seriesId/season/:seasonNumber",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "series", ":seriesId", "season", ":seasonNumber"],
+              "variable": [
+                {
+                  "key": "seriesId",
+                  "value": "",
+                  "description": "Series ID"
+                },
+                {
+                  "key": "seasonNumber",
+                  "value": "",
+                  "description": "Season number"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Series by Genre",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/series/genre/:genre",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "series", "genre", ":genre"],
+              "variable": [
+                {
+                  "key": "genre",
+                  "value": "",
+                  "description": "Genre name"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Episode",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/series/:seriesId/season/:seasonNumber/episode/:episodeNumber",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "series", ":seriesId", "season", ":seasonNumber", "episode", ":episodeNumber"],
+              "variable": [
+                {
+                  "key": "seriesId",
+                  "value": "",
+                  "description": "Series ID"
+                },
+                {
+                  "key": "seasonNumber",
+                  "value": "",
+                  "description": "Season number"
+                },
+                {
+                  "key": "episodeNumber",
+                  "value": "",
+                  "description": "Episode number"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Series Genres",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/series/genres",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "series", "genres"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Scanner",
+      "item": [
+        {
+          "name": "Start Manual Scan",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/scanner/scan",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "scanner", "scan"]
+            }
+          }
+        },
+        {
+          "name": "Add Media Folder",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/scanner/folders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "scanner", "folders"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"path\": \"/path/to/media\",\n  \"type\": \"movies\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Get All Media Folders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/scanner/folders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "scanner", "folders"]
+            }
+          }
+        },
+        {
+          "name": "Update Media Folder",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/api/scanner/folders/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "scanner", "folders", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Folder ID"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete Media Folder",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/scanner/folders/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "scanner", "folders", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Folder ID"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Scanning Conflicts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/scanner/conflicts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "scanner", "conflicts"]
+            }
+          }
+        },
+        {
+          "name": "Resolve Scanning Conflict",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/scanner/conflicts/:id/resolve",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "scanner", "conflicts", ":id", "resolve"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Conflict ID"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"selectedId\": 123\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "searchQuery",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
