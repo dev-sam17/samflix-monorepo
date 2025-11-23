@@ -1,20 +1,21 @@
 {
-  "name": "samflix-backend",
+  "name": "@samflix/backend",
   "version": "1.0.0",
   "description": "Backend service for Samflix media server",
   "main": "index.js",
   "scripts": {
     "build": "tsc",
     "start": "cross-env NODE_ENV=production node dist/app.js",
-    "dev": "cross-env NODE_ENV=development nodemon --exec ts-node src/app.ts"
+    "dev": "cross-env NODE_ENV=development nodemon --exec ts-node src/app.ts",
+    "lint": "eslint *"
   },
   "keywords": [],
-  "author": "",
+  "author": "Saurav Kumar",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "dependencies": {
     "@clerk/express": "^1.7.1",
-    "@dev-sam17/prisma-client-for-samflix": "^0.1.8",
+    "@samflix/prisma-client": "workspace:*",
     "@types/express": "^5.0.2",
     "@types/ioredis": "^5.0.0",
     "@types/node": "^22.15.23",
