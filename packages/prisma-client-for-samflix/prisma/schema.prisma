@@ -1,9 +1,8 @@
 // This is your Prisma schema file
 
 generator client {
-  provider      = "prisma-client-js"
-  output        = "../prisma/generated"
-  binaryTargets = ["native", "windows", "debian-openssl-1.1.x", "debian-openssl-3.0.x", "linux-musl", "linux-arm64-openssl-1.1.x", "linux-arm64-openssl-3.0.x", "darwin-arm64"]
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -37,19 +36,19 @@ model Movie {
 }
 
 model TvSeries {
-  id           String    @id @default(auto()) @map("_id") @db.ObjectId
-  tmdbId       Int       @unique
-  title        String
-  overview     String?
-  posterPath   String?
-  backdropPath String?
-  genres       String[]
-  firstAirDate DateTime?
-  lastAirDate  DateTime?
-  status       String?
-  episodes     Episode[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  tmdbId          Int             @unique
+  title           String
+  overview        String?
+  posterPath      String?
+  backdropPath    String?
+  genres          String[]
+  firstAirDate    DateTime?
+  lastAirDate     DateTime?
+  status          String?
+  episodes        Episode[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
   transcodeStatus TranscodeStatus @default(PENDING)
 }
 
