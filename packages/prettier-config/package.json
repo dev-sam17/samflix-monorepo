@@ -6,9 +6,7 @@
     "files": [
         "index.js"
     ],
-    "devDependencies": {
-        "prettier": "^3.6.2"
-    },
+    "devDependencies": {},
     "peerDependencies": {
         "prettier": ">=3.0.0"
     }

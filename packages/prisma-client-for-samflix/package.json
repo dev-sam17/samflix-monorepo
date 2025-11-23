@@ -16,8 +16,7 @@
     "@samflix/eslint-config": "workspace:*",
     "@samflix/prettier-config": "workspace:*",
     "@samflix/tsconfig": "workspace:*",
-    "prisma": "^6.19.0",
-    "typescript": "^5.0.0"
+    "prisma": "^6.19.0"
   },
   "prettier": "@samflix/prettier-config",
   "license": "MIT",
