@@ -1,3 +1,16 @@
 node_modules
 
 .windsurf
+
+
+apps/*/node_modules
+packages/*/node_modules
+
+apps/*/package-lock.json
+packages/*/package-lock.json
+
+apps/*/yarn.lock
+packages/*/yarn.lock
+
+apps/*/pnpm-lock.yaml
+packages/*/pnpm-lock.yaml
