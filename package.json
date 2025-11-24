@@ -7,11 +7,11 @@
   "license": "ISC",
   "scripts": {
     "dev": "turbo run dev",
-    "dev:frontend": "turbo run dev --filter=samflix-frontend",
-    "dev:backend": "turbo run dev --filter=samflix-backend",
+    "dev:frontend": "turbo run dev --filter=@samflix/frontend",
+    "dev:backend": "turbo run dev --filter=@samflix/backend",
     "build": "turbo run build --summarize",
-    "build:frontend": "turbo run build --filter=samflix-frontend --summarize",
-    "build:backend": "turbo run build --filter=samflix-backend --summarize",
+    "build:frontend": "turbo run build --filter=@samflix/frontend --summarize",
+    "build:backend": "turbo run build --filter=@samflix/backend --summarize",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "clean": "turbo run clean && rm -rf node_modules"
