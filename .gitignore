@@ -1,7 +1,7 @@
 node_modules
 
 .windsurf
-
+.turbo
 
 apps/*/node_modules
 packages/*/node_modules

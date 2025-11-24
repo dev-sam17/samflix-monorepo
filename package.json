@@ -6,10 +6,15 @@
   "author": "Saurav Kumar",
   "license": "ISC",
   "scripts": {
-    "dev": "pnpm --parallel --filter \"./apps/*\" dev",
-    "build": "pnpm --recursive --filter \"./packages/*\" build && pnpm --recursive --filter \"./apps/*\" build",
-    "lint": "pnpm --recursive lint",
-    "clean": "pnpm --recursive exec -- rm -rf dist node_modules .next"
+    "dev": "turbo run dev",
+    "dev:frontend": "turbo run dev --filter=samflix-frontend",
+    "dev:backend": "turbo run dev --filter=samflix-backend",
+    "build": "turbo run build --summarize",
+    "build:frontend": "turbo run build --filter=samflix-frontend --summarize",
+    "build:backend": "turbo run build --filter=samflix-backend --summarize",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "clean": "turbo run clean && rm -rf node_modules"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
