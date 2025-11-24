@@ -5,9 +5,16 @@
       "cache": false,
       "persistent": true
     },
+    "prisma:generate": {
+      "outputs": [
+        "node_modules/.prisma/**",
+        "src/generated/prisma/**"
+      ]
+    },
     "build": {
       "dependsOn": [
-        "^build"
+        "^build",
+        "^prisma:generate"
       ],
       "outputs": [
         "dist/**",
