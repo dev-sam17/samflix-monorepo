@@ -1,43 +1,119 @@
-import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Calendar, Tv } from "lucide-react";
-import Link from "next/link";
-import Image from "next/image";
-import { api } from "@/lib/api";
-import type { TvSeries } from "@/lib/types";
-import SeasonSection from "./seasonSection";
-import { SeriesProgressButton } from "./SeriesProgressButton";
+'use client';
 
-export default async function SeriesDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const series = await api.server.series.getById(id);
+import React, { useState, useCallback, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, Calendar, Tv } from 'lucide-react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { api, clientApi } from '@/lib/api';
+import type { TvSeries, Episode } from '@/lib/types';
+import SeasonSection from './seasonSection';
+import { SeriesProgressButton, SeriesPlayer } from './SeriesProgressButton';
+import { useParams } from 'next/navigation';
+import { useApiUrl } from '@/contexts/api-url-context';
+import { useUser } from '@clerk/nextjs';
+
+export default function SeriesDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
+  const [series, setSeries] = useState<TvSeries | null>(null);
+  const [isPlayerOpen, setIsPlayerOpen] = useState(false);
+  const [currentEpisode, setCurrentEpisode] = useState<Episode | null>(null);
+  const [seriesProgress, setSeriesProgress] = useState<{
+    tmdbId: string;
+    currentTime: number;
+  } | null>(null);
+  const { apiBaseUrl } = useApiUrl();
+  const { user } = useUser();
+
+  // Fetch series data
+  useEffect(() => {
+    const fetchSeries = async () => {
+      if (!apiBaseUrl) return;
+      const data = await api.client.series.getById(apiBaseUrl, id);
+      setSeries(data);
+    };
+    fetchSeries();
+  }, [id, apiBaseUrl]);
+
+  // Fetch series progress
+  useEffect(() => {
+    const fetchProgress = async () => {
+      if (!user || !series?.id || !apiBaseUrl) return;
+      try {
+        const progress = await clientApi.progress.getSeriesProgress(apiBaseUrl, user.id, series.id);
+        if (progress) {
+          setSeriesProgress(progress);
+        }
+      } catch (error) {
+        console.error('Error fetching series progress:', error);
+      }
+    };
+    fetchProgress();
+  }, [user, series?.id, apiBaseUrl]);
+
+  const handlePlayerOpen = useCallback((episode: Episode) => {
+    setCurrentEpisode(episode);
+    setIsPlayerOpen(true);
+  }, []);
+
+  const handlePlayerClose = useCallback(() => {
+    setIsPlayerOpen(false);
+    setCurrentEpisode(null);
+  }, []);
+
+  const handleTimeUpdate = useCallback(
+    async (currentTime: number) => {
+      if (!user || !currentEpisode || !series?.id || !apiBaseUrl) return;
+      try {
+        await clientApi.progress.saveSeriesProgress(
+          apiBaseUrl,
+          user.id,
+          series.id,
+          currentEpisode.id.toString(),
+          currentTime
+        );
+      } catch (error) {
+        console.error('Error saving series progress:', error);
+      }
+    },
+    [user, currentEpisode, series?.id, apiBaseUrl]
+  );
+
+  if (!series) {
+    return <div className="min-h-screen bg-black text-white">Loading...</div>;
+  }
+
   const totalEpisodes = series.episodes.length;
 
   // Calculate seasons from episodes
-  const seasons = Array.from(
-    new Set(series.episodes.map((ep) => ep.seasonNumber))
-  )
+  const seasons = Array.from(new Set(series.episodes.map((ep) => ep.seasonNumber)))
     .sort((a, b) => a - b)
     .map((seasonNumber) => ({
       seasonNumber,
-      episodes: series.episodes.filter(
-        (ep) => ep.seasonNumber === seasonNumber
-      ),
+      episodes: series.episodes.filter((ep) => ep.seasonNumber === seasonNumber),
     }));
 
   return (
     <div className="min-h-screen bg-black text-white">
+      {/* Video Player Section - Shows when playing */}
+      {isPlayerOpen && currentEpisode && (
+        <SeriesPlayer
+          series={series}
+          episode={currentEpisode}
+          onBack={handlePlayerClose}
+          initialTime={seriesProgress?.currentTime || 0}
+          onTimeUpdate={handleTimeUpdate}
+        />
+      )}
+
       {/* Hero Section */}
       <div className="relative h-[50vh] md:h-[60vh] overflow-hidden">
         <Image
-          src={api.utils.getTmdbImageUrl(series.backdropPath || "", "original")}
+          src={api.utils.getTmdbImageUrl(series.backdropPath || '', 'original')}
           alt={series.title}
           fill
           className="object-cover"
@@ -69,8 +145,8 @@ export default async function SeriesDetailPage({
               <Image
                 src={
                   series.posterPath
-                    ? api.utils.getTmdbImageUrl(series.posterPath, "w300")
-                    : "/placeholder.svg"
+                    ? api.utils.getTmdbImageUrl(series.posterPath, 'w300')
+                    : '/placeholder.svg'
                 }
                 alt={series.title}
                 fill
@@ -90,9 +166,7 @@ export default async function SeriesDetailPage({
                 <div className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
                   <span>
-                    {series.firstAirDate
-                      ? new Date(series.firstAirDate).getFullYear()
-                      : "Unknown"}
+                    {series.firstAirDate ? new Date(series.firstAirDate).getFullYear() : 'Unknown'}
                   </span>
                   {series.lastAirDate && (
                     <>
@@ -103,9 +177,9 @@ export default async function SeriesDetailPage({
                 </div>
                 <Badge
                   className={
-                    series.status === "Ended"
-                      ? "bg-red-600 text-white border-red-600"
-                      : "bg-green-600 text-white border-green-600"
+                    series.status === 'Ended'
+                      ? 'bg-red-600 text-white border-red-600'
+                      : 'bg-green-600 text-white border-green-600'
                   }
                 >
                   {series.status}
@@ -132,41 +206,29 @@ export default async function SeriesDetailPage({
                 {series.overview}
               </p>
 
-              <SeriesProgressButton series={series} />
+              <SeriesProgressButton series={series} onPlayerOpen={handlePlayerOpen} />
             </div>
 
             {/* Series Stats */}
             <div className="grid grid-cols-3 gap-3 md:gap-4">
               <Card className="bg-gray-900/50 border-gray-800 hover:border-red-500/30 transition-colors">
                 <CardContent className="p-3 md:p-4 text-center">
-                  <div className="text-xl md:text-2xl font-bold text-red-400">
-                    {seasons.length}
-                  </div>
-                  <div className="text-xs md:text-sm text-gray-400">
-                    Seasons
-                  </div>
+                  <div className="text-xl md:text-2xl font-bold text-red-400">{seasons.length}</div>
+                  <div className="text-xs md:text-sm text-gray-400">Seasons</div>
+                </CardContent>
+              </Card>
+              <Card className="bg-gray-900/50 border-gray-800 hover:border-red-500/30 transition-colors">
+                <CardContent className="p-3 md:p-4 text-center">
+                  <div className="text-xl md:text-2xl font-bold text-red-400">{totalEpisodes}</div>
+                  <div className="text-xs md:text-sm text-gray-400">Episodes</div>
                 </CardContent>
               </Card>
               <Card className="bg-gray-900/50 border-gray-800 hover:border-red-500/30 transition-colors">
                 <CardContent className="p-3 md:p-4 text-center">
                   <div className="text-xl md:text-2xl font-bold text-red-400">
-                    {totalEpisodes}
+                    {series.firstAirDate ? new Date(series.firstAirDate).getFullYear() : 'N/A'}
                   </div>
-                  <div className="text-xs md:text-sm text-gray-400">
-                    Episodes
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-gray-900/50 border-gray-800 hover:border-red-500/30 transition-colors">
-                <CardContent className="p-3 md:p-4 text-center">
-                  <div className="text-xl md:text-2xl font-bold text-red-400">
-                    {series.firstAirDate
-                      ? new Date(series.firstAirDate).getFullYear()
-                      : "N/A"}
-                  </div>
-                  <div className="text-xs md:text-sm text-gray-400">
-                    First Aired
-                  </div>
+                  <div className="text-xs md:text-sm text-gray-400">First Aired</div>
                 </CardContent>
               </Card>
             </div>
@@ -199,7 +261,7 @@ export default async function SeriesDetailPage({
                     <SeasonSection
                       key={season.seasonNumber}
                       season={season}
-                      seriesId={series.id}
+                      onPlayClick={handlePlayerOpen}
                     />
                   ))}
                 </div>
@@ -208,38 +270,26 @@ export default async function SeriesDetailPage({
 
             <TabsContent value="details" className="mt-6">
               <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-white">
-                  Series Details
-                </h2>
+                <h2 className="text-2xl font-bold text-white">Series Details</h2>
                 <Card className="bg-gray-900/50 border-gray-800 hover:border-red-500/30 transition-colors">
                   <CardContent className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <h3 className="text-lg font-semibold text-white mb-4">
-                          Information
-                        </h3>
+                        <h3 className="text-lg font-semibold text-white mb-4">Information</h3>
                         <div className="space-y-3">
                           <div>
-                            <div className="text-sm text-gray-400">
-                              First Air Date
-                            </div>
+                            <div className="text-sm text-gray-400">First Air Date</div>
                             <div className="text-white">
                               {series.firstAirDate
-                                ? new Date(
-                                    series.firstAirDate
-                                  ).toLocaleDateString()
-                                : "Unknown"}
+                                ? new Date(series.firstAirDate).toLocaleDateString()
+                                : 'Unknown'}
                             </div>
                           </div>
                           {series.lastAirDate && (
                             <div>
-                              <div className="text-sm text-gray-400">
-                                Last Air Date
-                              </div>
+                              <div className="text-sm text-gray-400">Last Air Date</div>
                               <div className="text-white">
-                                {new Date(
-                                  series.lastAirDate
-                                ).toLocaleDateString()}
+                                {new Date(series.lastAirDate).toLocaleDateString()}
                               </div>
                             </div>
                           )}
@@ -247,9 +297,9 @@ export default async function SeriesDetailPage({
                             <div className="text-sm text-gray-400">Status</div>
                             <Badge
                               className={
-                                series.status === "Ended"
-                                  ? "bg-red-600 text-white border-red-600"
-                                  : "bg-green-600 text-white border-green-600"
+                                series.status === 'Ended'
+                                  ? 'bg-red-600 text-white border-red-600'
+                                  : 'bg-green-600 text-white border-green-600'
                               }
                             >
                               {series.status}
@@ -258,9 +308,7 @@ export default async function SeriesDetailPage({
                         </div>
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-white mb-4">
-                          Genres
-                        </h3>
+                        <h3 className="text-lg font-semibold text-white mb-4">Genres</h3>
                         <div className="flex gap-2 flex-wrap">
                           {series.genres.map((genre) => (
                             <Badge

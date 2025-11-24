@@ -1,15 +1,21 @@
-"use client";
+'use client';
 
-import React, { useState, useRef, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import type { Season } from "@/lib/types";
-import { ChevronDown, ChevronRight, ChevronLeft, Play } from "lucide-react";
-import { EpisodeCard } from "./EpisodeCard";
-import { cn } from "@/lib/utils";
+import React, { useState, useRef, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import type { Season } from '@/lib/types';
+import { ChevronDown, ChevronRight, ChevronLeft, Play } from 'lucide-react';
+import { EpisodeCard } from './EpisodeCard';
+import { cn } from '@/lib/utils';
 
-export default function SeasonSection({ season, seriesId }: { season: Season; seriesId: string }) {
+export default function SeasonSection({
+  season,
+  onPlayClick,
+}: {
+  season: Season;
+  onPlayClick?: (episode: any) => void;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
@@ -50,14 +56,10 @@ export default function SeasonSection({ season, seriesId }: { season: Season; se
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-gradient-to-br from-red-600 to-red-800 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="font-bold text-white text-lg">
-                S{season.seasonNumber}
-              </span>
+              <span className="font-bold text-white text-lg">S{season.seasonNumber}</span>
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white mb-1">
-                Season {season.seasonNumber}
-              </h3>
+              <h3 className="text-xl font-bold text-white mb-1">Season {season.seasonNumber}</h3>
               <p className="text-gray-400 flex items-center gap-2 text-sm">
                 <Play className="w-3 h-3" />
                 {season.episodes.length} episodes
@@ -71,18 +73,18 @@ export default function SeasonSection({ season, seriesId }: { season: Season; se
             >
               {season.episodes.length} Episodes
             </Badge>
-            <ChevronDown 
+            <ChevronDown
               className={cn(
-                "w-5 h-5 text-gray-400 transition-transform duration-300 ease-in-out",
-                isOpen ? "rotate-180" : "rotate-90"
-              )} 
+                'w-5 h-5 text-gray-400 transition-transform duration-300 ease-in-out',
+                isOpen ? 'rotate-180' : 'rotate-90'
+              )}
             />
           </div>
         </div>
       </CardContent>
 
       {/* Episodes Carousel - Animated Collapsible Content */}
-      <div 
+      <div
         className="transition-all duration-500 ease-in-out overflow-hidden"
         style={{ height: contentHeight }}
       >
@@ -132,11 +134,7 @@ export default function SeasonSection({ season, seriesId }: { season: Season; se
                     className="animate-in fade-in slide-in-from-bottom-2 duration-300"
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
-                    <EpisodeCard
-                      episode={episode}
-                      seasonNumber={season.seasonNumber}
-                      seriesId={seriesId}
-                    />
+                    <EpisodeCard episode={episode} onPlayClick={onPlayClick} />
                   </div>
                 ))}
               </div>
@@ -152,10 +150,10 @@ export default function SeasonSection({ season, seriesId }: { season: Season; se
                         setCurrentIndex(index);
                       }}
                       className={cn(
-                        "w-2 h-2 rounded-full transition-all duration-300 hover:scale-110",
+                        'w-2 h-2 rounded-full transition-all duration-300 hover:scale-110',
                         index === currentIndex
-                          ? "bg-red-500 scale-125 shadow-lg shadow-red-500/50"
-                          : "bg-gray-600 hover:bg-gray-500"
+                          ? 'bg-red-500 scale-125 shadow-lg shadow-red-500/50'
+                          : 'bg-gray-600 hover:bg-gray-500'
                       )}
                       aria-label={`Go to page ${index + 1}`}
                     />

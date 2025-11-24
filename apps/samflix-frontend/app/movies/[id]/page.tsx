@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   ArrowLeft,
   Star,
@@ -12,17 +12,16 @@ import {
   Play,
   ChevronLeft,
   ChevronRight,
-} from "lucide-react";
-import Link from "next/link";
-import Image from "next/image";
-import { api } from "@/lib/api";
-import { useParams } from "next/navigation";
-import type { Movie } from "@/lib/types";
-import { TranscodeStatus } from "@/lib/types";
-import { useApiWithContext } from "@/hooks/use-api-with-context";
-import { useApi } from "@/hooks/use-api";
-import { useState } from "react";
-import { MovieHeader } from "./MovieHeader";
+} from 'lucide-react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { api } from '@/lib/api';
+import { useParams } from 'next/navigation';
+import type { Movie } from '@/lib/types';
+import { TranscodeStatus } from '@/lib/types';
+import { useApiWithContext } from '@/hooks/use-api-with-context';
+import { useState, useCallback } from 'react';
+import { MovieHeader } from './MovieHeader';
 
 function LoadingSkeleton() {
   return (
@@ -67,9 +66,9 @@ function RecommendationCarousel({ movie }: { movie: Movie }) {
         baseUrl,
         limit: 20,
         genre,
-        sortBy: "rating",
-        sortOrder: "desc",
-        status: "COMPLETED",
+        sortBy: 'rating',
+        sortOrder: 'desc',
+        status: 'COMPLETED',
       });
     },
     [movie.genres]
@@ -77,10 +76,7 @@ function RecommendationCarousel({ movie }: { movie: Movie }) {
 
   // Filter out the current movie, only show completed movies, and limit to 12 items
   const filteredMovies = (recommendedMovies?.data || [])
-    .filter(
-      (m: Movie) =>
-        m.id !== movie.id && m.transcodeStatus === TranscodeStatus.COMPLETED
-    )
+    .filter((m: Movie) => m.id !== movie.id && m.transcodeStatus === TranscodeStatus.COMPLETED)
     .slice(0, 12);
 
   const maxIndex = Math.max(0, filteredMovies.length - itemsPerPage);
@@ -143,10 +139,7 @@ function RecommendationCarousel({ movie }: { movie: Movie }) {
               <Card className="bg-gray-900/50 border-gray-800 hover:border-red-500/50 transition-all duration-300 group-hover:scale-105">
                 <div className="relative aspect-[2/3] overflow-hidden rounded-t-lg">
                   <Image
-                    src={api.utils.getTmdbImageUrl(
-                      recMovie.posterPath || "",
-                      "w300"
-                    )}
+                    src={api.utils.getTmdbImageUrl(recMovie.posterPath || '', 'w300')}
                     alt={recMovie.title}
                     fill
                     className="object-cover transition-transform duration-300 group-hover:scale-110"
@@ -184,8 +177,7 @@ function RecommendationCarousel({ movie }: { movie: Movie }) {
                     {recMovie.runtime && (
                       <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
-                        {Math.floor(recMovie.runtime / 60)}h{" "}
-                        {recMovie.runtime % 60}m
+                        {Math.floor(recMovie.runtime / 60)}h {recMovie.runtime % 60}m
                       </div>
                     )}
                   </div>
@@ -220,6 +212,17 @@ export default function MovieDetailPage() {
     [id]
   );
 
+  // All hooks must be called before any conditional returns
+  const [isPlayerOpen, setIsPlayerOpen] = useState(false);
+
+  const handlePlayerOpen = useCallback(() => {
+    setIsPlayerOpen(true);
+  }, []);
+
+  const handlePlayerClose = useCallback(() => {
+    setIsPlayerOpen(false);
+  }, []);
+
   if (moviesLoading) {
     return <LoadingSkeleton />;
   }
@@ -244,56 +247,61 @@ export default function MovieDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Back Button */}
-      <div className="absolute top-6 left-6 z-30">
-        <Link href="/movies">
-          <Button
-            variant="outline"
-            size="sm"
-            className="bg-black/50 border-gray-600 text-white hover:bg-black/70 backdrop-blur-sm"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Movies
-          </Button>
-        </Link>
-      </div>
+    <div className="min-h-screen bg-black text-white relative">
+      {/* Back Button - Only show when player is NOT open */}
+      {!isPlayerOpen && (
+        <div className="absolute top-6 left-6 z-30">
+          <Link href="/movies">
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-black/50 border-gray-600 text-white hover:bg-black/70 backdrop-blur-sm"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Movies
+            </Button>
+          </Link>
+        </div>
+      )}
 
       {/* Movie Header with Play Functionality */}
-      <MovieHeader movie={movie} />
+      <MovieHeader
+        movie={movie}
+        onPlayerOpen={handlePlayerOpen}
+        onPlayerClose={handlePlayerClose}
+        isPlayerOpen={isPlayerOpen}
+      />
 
-      {/* Movie Stats Section */}
-      <div className="container mx-auto px-4 py-6 md:py-8">
-        <div className="grid grid-cols-3 gap-3 md:flex md:gap-4 mb-6 md:mb-8">
-          {movie.quality && (
-            <div className="bg-gray-900/60 border border-gray-700 rounded-lg px-3 py-2 md:px-4 md:py-3 text-center hover:border-red-500/30 transition-colors">
-              <div className="text-sm md:text-base font-semibold text-red-400">
-                {movie.quality}
+      {/* Movie Stats Section - Hidden when player is open */}
+      {!isPlayerOpen && (
+        <div className="container mx-auto px-4 py-6 md:py-8">
+          <div className="grid grid-cols-3 gap-3 md:flex md:gap-4 mb-6 md:mb-8">
+            {movie.quality && (
+              <div className="bg-gray-900/60 border border-gray-700 rounded-lg px-3 py-2 md:px-4 md:py-3 text-center hover:border-red-500/30 transition-colors">
+                <div className="text-sm md:text-base font-semibold text-red-400">
+                  {movie.quality}
+                </div>
+                <div className="text-xs text-gray-400">Quality</div>
               </div>
-              <div className="text-xs text-gray-400">Quality</div>
-            </div>
-          )}
-          {movie.rip && (
-            <div className="bg-gray-900/60 border border-gray-700 rounded-lg px-3 py-2 md:px-4 md:py-3 text-center hover:border-red-500/30 transition-colors">
-              <div className="text-sm md:text-base font-semibold text-red-400">
-                {movie.rip}
+            )}
+            {movie.rip && (
+              <div className="bg-gray-900/60 border border-gray-700 rounded-lg px-3 py-2 md:px-4 md:py-3 text-center hover:border-red-500/30 transition-colors">
+                <div className="text-sm md:text-base font-semibold text-red-400">{movie.rip}</div>
+                <div className="text-xs text-gray-400">Source</div>
               </div>
-              <div className="text-xs text-gray-400">Source</div>
-            </div>
-          )}
-          {movie.sound && (
-            <div className="bg-gray-900/60 border border-gray-700 rounded-lg px-3 py-2 md:px-4 md:py-3 text-center hover:border-red-500/30 transition-colors">
-              <div className="text-sm md:text-base font-semibold text-red-400">
-                {movie.sound}
+            )}
+            {movie.sound && (
+              <div className="bg-gray-900/60 border border-gray-700 rounded-lg px-3 py-2 md:px-4 md:py-3 text-center hover:border-red-500/30 transition-colors">
+                <div className="text-sm md:text-base font-semibold text-red-400">{movie.sound}</div>
+                <div className="text-xs text-gray-400">Audio</div>
               </div>
-              <div className="text-xs text-gray-400">Audio</div>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* Recommendations Section */}
+          <RecommendationCarousel movie={movie} />
         </div>
-
-        {/* Recommendations Section */}
-        <RecommendationCarousel movie={movie} />
-      </div>
+      )}
     </div>
   );
 }
