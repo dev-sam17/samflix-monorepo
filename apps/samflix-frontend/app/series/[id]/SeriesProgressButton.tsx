@@ -3,16 +3,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { HLSPlayer } from '@/components/hls-player';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Play, RotateCcw } from 'lucide-react';
 import { clientApi } from '@/lib/api';
 import type { TvSeries, Episode } from '@/lib/types';
@@ -126,15 +116,14 @@ export function SeriesProgressButton({
     episodeNumber?: number;
   } | null>(null);
   const [currentEpisode, setCurrentEpisode] = useState<Episode | null>(null);
-  const [isResumeDialogOpen, setIsResumeDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const { isAuthenticated } = useAuth();
   const { user } = useUser();
   const { apiBaseUrl } = useApiUrl();
 
-  // Find the latest completed episode
-  const getLatestEpisode = useCallback(() => {
+  // Find the first completed episode
+  const getFirstEpisode = useCallback(() => {
     const completedEpisodes = series.episodes
       .filter((ep) => ep.transcodeStatus === TranscodeStatus.COMPLETED)
       .sort((a, b) => {
@@ -144,7 +133,7 @@ export function SeriesProgressButton({
         return a.episodeNumber - b.episodeNumber;
       });
 
-    return completedEpisodes[completedEpisodes.length - 1] || null;
+    return completedEpisodes[0] || null;
   }, [series.episodes]);
 
   // Fetch series progress when component mounts
@@ -220,52 +209,57 @@ export function SeriesProgressButton({
     }
   }, [isAuthenticated, user, series.id, apiBaseUrl]);
 
-  // Handle play button click
-  const handlePlayClick = useCallback(() => {
-    if (seriesProgress && seriesProgress.currentTime > 0 && currentEpisode) {
-      setIsResumeDialogOpen(true);
-    } else {
-      // Play latest episode
-      const latestEpisode = getLatestEpisode();
-      if (latestEpisode) {
-        setCurrentEpisode(latestEpisode);
-        if (onPlayerOpen) {
-          onPlayerOpen(latestEpisode);
-        } else {
-          setIsPlayerOpen(true);
-        }
+  // Handle play first episode
+  const handlePlayFirst = useCallback(() => {
+    const firstEpisode = getFirstEpisode();
+    if (firstEpisode) {
+      setCurrentEpisode(firstEpisode);
+      if (onPlayerOpen) {
+        onPlayerOpen(firstEpisode);
+      } else {
+        setIsPlayerOpen(true);
       }
     }
-  }, [seriesProgress, currentEpisode, getLatestEpisode, onPlayerOpen]);
+  }, [getFirstEpisode, onPlayerOpen]);
 
-  const handleResumePlay = () => {
-    setIsResumeDialogOpen(false);
-    setIsPlayerOpen(true);
-  };
-
-  const handleStartOver = () => {
-    setIsResumeDialogOpen(false);
-    handleDeleteProgress();
-    const latestEpisode = getLatestEpisode();
-    if (latestEpisode) {
-      setCurrentEpisode(latestEpisode);
-      setIsPlayerOpen(true);
+  // Handle resume playback
+  const handleResume = useCallback(() => {
+    if (currentEpisode) {
+      if (onPlayerOpen) {
+        onPlayerOpen(currentEpisode);
+      } else {
+        setIsPlayerOpen(true);
+      }
     }
-  };
+  }, [currentEpisode, onPlayerOpen]);
+
+  // Handle start over - reset progress and play first episode
+  const handleStartOver = useCallback(async () => {
+    await handleDeleteProgress();
+    const firstEpisode = getFirstEpisode();
+    if (firstEpisode) {
+      setCurrentEpisode(firstEpisode);
+      if (onPlayerOpen) {
+        onPlayerOpen(firstEpisode);
+      } else {
+        setIsPlayerOpen(true);
+      }
+    }
+  }, [handleDeleteProgress, getFirstEpisode, onPlayerOpen]);
 
   if (!isAuthenticated) {
     return (
       <SignInButton mode="modal">
         <Button size="lg" className="bg-red-600 hover:bg-red-700 w-full sm:w-auto">
           <Play className="w-5 h-5 mr-2" />
-          Play Latest
+          Play First Episode
         </Button>
       </SignInButton>
     );
   }
 
-  const latestEpisode = getLatestEpisode();
-  if (!latestEpisode) {
+  const firstEpisode = getFirstEpisode();
+  if (!firstEpisode) {
     return (
       <Button
         size="lg"
@@ -281,25 +275,36 @@ export function SeriesProgressButton({
   return (
     <>
       <div className="flex gap-4 flex-wrap">
-        <Button
-          size="lg"
-          className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
-          onClick={handlePlayClick}
-          disabled={isLoading}
-        >
-          <Play className="w-5 h-5 mr-2" />
-          {isLoading ? 'Loading...' : seriesProgress ? 'Continue Watching' : 'Play Latest'}
-        </Button>
-
-        {seriesProgress && seriesProgress.currentTime > 0 && (
+        {seriesProgress && seriesProgress.currentTime > 0 ? (
+          <>
+            <Button
+              size="lg"
+              className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
+              onClick={handleResume}
+              disabled={isLoading}
+            >
+              <Play className="w-5 h-5 mr-2" />
+              {isLoading ? 'Loading...' : 'Resume'}
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="text-gray-300 border-gray-700 hover:bg-gray-800 w-full sm:w-auto"
+              onClick={handleStartOver}
+            >
+              <RotateCcw className="w-5 h-5 mr-2" />
+              Start Over
+            </Button>
+          </>
+        ) : (
           <Button
-            variant="outline"
             size="lg"
-            className="text-gray-300 border-gray-700 hover:bg-gray-800 w-full sm:w-auto"
-            onClick={handleDeleteProgress}
+            className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
+            onClick={handlePlayFirst}
+            disabled={isLoading}
           >
-            <RotateCcw className="w-5 h-5 mr-2" />
-            Reset Progress
+            <Play className="w-5 h-5 mr-2" />
+            {isLoading ? 'Loading...' : 'Play First Episode'}
           </Button>
         )}
       </div>
@@ -317,31 +322,6 @@ export function SeriesProgressButton({
           )}
         </div>
       )}
-
-      {/* Resume Playback Dialog */}
-      <AlertDialog open={isResumeDialogOpen} onOpenChange={setIsResumeDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Resume Watching</AlertDialogTitle>
-            <AlertDialogDescription>
-              Would you like to continue watching "{currentEpisode?.title}" from where you left off
-              {seriesProgress?.currentTime
-                ? ` (${Math.floor(seriesProgress.currentTime / 60)}m ${Math.floor(seriesProgress.currentTime % 60)}s)`
-                : ''}
-              ?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleStartOver}>Start Over</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleResumePlay}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              Resume
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

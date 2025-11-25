@@ -12,16 +12,6 @@ import { runtimeFormat } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { SignInButton, useUser } from '@clerk/nextjs';
 import { useApiUrl } from '@/contexts/api-url-context';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
 interface MovieHeaderProps {
@@ -51,13 +41,10 @@ export function MovieHeader({
     }
   };
   const [playbackProgress, setPlaybackProgress] = useState<number | null>(null);
-  const [isResumeDialogOpen, setIsResumeDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { isAuthenticated } = useAuth();
   const { user } = useUser();
   const { apiBaseUrl } = useApiUrl();
-
-  
 
   // Fetch playback progress when component mounts
   useEffect(() => {
@@ -79,7 +66,6 @@ export function MovieHeader({
         );
         if (progress && progress.currentTime > 0) {
           setPlaybackProgress(progress.currentTime);
-          setIsResumeDialogOpen(true);
         } else {
           setPlaybackProgress(0);
         }
@@ -137,14 +123,21 @@ export function MovieHeader({
     }
   }, [isAuthenticated, user, movie.id, apiBaseUrl]);
 
-  // Handle play button click
-  const handlePlayClick = useCallback(() => {
-    if (playbackProgress && playbackProgress > 0) {
-      setIsResumeDialogOpen(true);
-    } else {
-      setIsPlayerOpen(true);
-    }
-  }, [playbackProgress]);
+  // Handle resume playback
+  const handleResume = useCallback(() => {
+    setIsPlayerOpen(true);
+  }, []);
+
+  // Handle start over - reset progress and play from beginning
+  const handleStartOver = useCallback(async () => {
+    await handleDeleteProgress();
+    setIsPlayerOpen(true);
+  }, [handleDeleteProgress]);
+
+  // Handle play from beginning
+  const handlePlay = useCallback(() => {
+    setIsPlayerOpen(true);
+  }, []);
 
   return (
     <>
@@ -278,14 +271,35 @@ export function MovieHeader({
                   <div className="flex flex-wrap gap-3 pt-4">
                     <>
                       {isAuthenticated ? (
-                        <Button
-                          className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto"
-                          onClick={handlePlayClick}
-                          disabled={isLoading}
-                        >
-                          <Play className="w-4 h-4 mr-2" />
-                          {isLoading ? 'Loading...' : 'Play'}
-                        </Button>
+                        playbackProgress !== null && playbackProgress > 0 ? (
+                          <>
+                            <Button
+                              className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto"
+                              onClick={handleResume}
+                              disabled={isLoading}
+                            >
+                              <Play className="w-4 h-4 mr-2" />
+                              {isLoading ? 'Loading...' : 'Resume'}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="text-gray-300 border-gray-700 hover:bg-gray-800 w-full sm:w-auto"
+                              onClick={handleStartOver}
+                            >
+                              <RotateCcw className="w-4 h-4 mr-2" />
+                              Start Over
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto"
+                            onClick={handlePlay}
+                            disabled={isLoading}
+                          >
+                            <Play className="w-4 h-4 mr-2" />
+                            {isLoading ? 'Loading...' : 'Play'}
+                          </Button>
+                        )
                       ) : (
                         <SignInButton mode="modal" fallbackRedirectUrl={window.location.href}>
                           <Button className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto">
@@ -293,16 +307,6 @@ export function MovieHeader({
                             Play
                           </Button>
                         </SignInButton>
-                      )}
-                      {playbackProgress !== null && playbackProgress > 0 && isAuthenticated && (
-                        <Button
-                          variant="outline"
-                          className="text-gray-300 border-gray-700 hover:bg-gray-800 w-full sm:w-auto"
-                          onClick={handleDeleteProgress}
-                        >
-                          <RotateCcw className="w-4 h-4 mr-2" />
-                          Reset Progress
-                        </Button>
                       )}
                     </>
                     {(movie.transcodeStatus === TranscodeStatus.IN_PROGRESS ||
@@ -323,32 +327,6 @@ export function MovieHeader({
           </div>
         </>
       )}
-
-      {/* Resume Playback Dialog */}
-      <AlertDialog open={isResumeDialogOpen} onOpenChange={setIsResumeDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Resume Playback</AlertDialogTitle>
-            <AlertDialogDescription>
-              Would you like to resume watching "{movie.title}" from where you left off (
-              {playbackProgress ? Math.floor(playbackProgress / 60) : 0}m
-              {playbackProgress ? Math.floor(playbackProgress % 60) : 0}s)?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleDeleteProgress}>Start Over</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setIsResumeDialogOpen(false);
-                setIsPlayerOpen(true);
-              }}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              Resume
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
