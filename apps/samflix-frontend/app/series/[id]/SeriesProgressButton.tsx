@@ -35,6 +35,8 @@ interface SeriesPlayerProps {
   onBack: () => void;
   initialTime?: number;
   onTimeUpdate?: (currentTime: number) => void;
+  nextEpisode?: Episode | null;
+  onPlayNext?: () => void;
 }
 
 export function SeriesPlayer({
@@ -43,6 +45,8 @@ export function SeriesPlayer({
   onBack,
   initialTime = 0,
   onTimeUpdate,
+  nextEpisode,
+  onPlayNext,
 }: SeriesPlayerProps) {
   const { user } = useUser();
   const { apiBaseUrl } = useApiUrl();
@@ -68,6 +72,14 @@ export function SeriesPlayer({
           clerkId={user?.id}
           initialTime={initialTime}
           onTimeUpdate={onTimeUpdate}
+          nextEpisode={
+            nextEpisode
+              ? {
+                  title: `${nextEpisode.title} - S${nextEpisode.seasonNumber}E${nextEpisode.episodeNumber}`,
+                  onPlay: onPlayNext,
+                }
+              : undefined
+          }
           audioTracks={[
             {
               kind: 'audio',

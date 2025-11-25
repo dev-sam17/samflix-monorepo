@@ -25,6 +25,8 @@ import {
   Settings,
   Languages,
   Subtitles,
+  ChevronRight,
+  X,
 } from 'lucide-react';
 interface AudioTrack {
   kind: string;
@@ -52,6 +54,11 @@ interface QualityLevel {
   name: string;
 }
 
+interface NextEpisodeInfo {
+  title: string;
+  onPlay?: () => void;
+}
+
 interface HLSPlayerProps {
   src: string;
   title?: string;
@@ -64,6 +71,7 @@ interface HLSPlayerProps {
   clerkId?: string;
   initialTime?: number;
   onTimeUpdate?: (currentTime: number) => void;
+  nextEpisode?: NextEpisodeInfo;
 }
 
 export function HLSPlayer({
@@ -76,6 +84,7 @@ export function HLSPlayer({
   clerkId,
   initialTime = 0,
   onTimeUpdate,
+  nextEpisode,
 }: HLSPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -98,6 +107,8 @@ export function HLSPlayer({
   const [isPortrait, setIsPortrait] = useState(false);
   const [videoScale, setVideoScale] = useState(1);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [showNextEpisodeOverlay, setShowNextEpisodeOverlay] = useState(false);
+  const [countdown, setCountdown] = useState(10);
 
   // HLS-specific state
   const [availableAudioTracks, setAvailableAudioTracks] = useState<AudioTrack[]>([]);
@@ -533,6 +544,37 @@ export function HLSPlayer({
     };
   }, []);
 
+  // Handle next episode countdown and autoplay
+  useEffect(() => {
+    if (!nextEpisode || duration === 0) return;
+
+    const timeRemaining = duration - currentTime;
+
+    // Show overlay when less than 30 seconds remain
+    if (timeRemaining <= 30 && timeRemaining > 0 && !showNextEpisodeOverlay) {
+      setShowNextEpisodeOverlay(true);
+      setCountdown(Math.floor(timeRemaining));
+    }
+
+    // Update countdown
+    if (showNextEpisodeOverlay && timeRemaining > 0) {
+      setCountdown(Math.floor(timeRemaining));
+    }
+
+    // Autoplay next episode when current ends
+    if (timeRemaining <= 0.5 && showNextEpisodeOverlay) {
+      nextEpisode.onPlay?.();
+    }
+  }, [currentTime, duration, nextEpisode, showNextEpisodeOverlay]);
+
+  const handleCancelNextEpisode = () => {
+    setShowNextEpisodeOverlay(false);
+  };
+
+  const handlePlayNextNow = () => {
+    nextEpisode?.onPlay?.();
+  };
+
   // Controls visibility with mobile-specific timeout
   const showControls = useCallback(() => {
     setIsControlsVisible(true);
@@ -838,6 +880,47 @@ export function HLSPlayer({
               isMobile ? 'w-12 h-12' : 'w-16 h-16'
             )}
           ></div>
+        </div>
+      )}
+
+      {/* Next Episode Countdown Overlay */}
+      {showNextEpisodeOverlay && nextEpisode && (
+        <div className="absolute bottom-20 right-4 md:bottom-24 md:right-8 z-50 bg-gray-900/95 backdrop-blur-md border border-gray-700 rounded-lg p-4 md:p-6 max-w-sm shadow-2xl">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <div className="text-sm text-gray-400 mb-1">Up Next</div>
+              <h3 className="text-white font-semibold text-base md:text-lg mb-2 line-clamp-2">
+                {nextEpisode.title}
+              </h3>
+              <div className="text-sm text-gray-300 mb-3">Playing in {countdown} seconds...</div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={handlePlayNextNow}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  <ChevronRight className="w-4 h-4 mr-1" />
+                  Play Now
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleCancelNextEpisode}
+                  className="border-gray-600 text-gray-300 hover:bg-gray-800"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={handleCancelNextEpisode}
+              className="text-gray-400 hover:text-white hover:bg-gray-800 flex-shrink-0"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       )}
 
@@ -1181,6 +1264,23 @@ export function HLSPlayer({
                     </div>
                   </DropdownMenuContent>
                 </DropdownMenu>
+              )}
+
+              {/* Next Episode Button */}
+              {nextEpisode && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    'text-white hover:bg-white/20 flex-shrink-0 gap-1',
+                    isMobile ? 'h-11 px-3 min-h-[44px]' : 'h-10 px-3'
+                  )}
+                  onClick={handlePlayNextNow}
+                  aria-label="Play next episode"
+                >
+                  <span className="text-sm font-medium">Next</span>
+                  <ChevronRight className={cn('h-4 w-4', isMobile ? 'h-5 w-5' : '')} />
+                </Button>
               )}
 
               {/* Fullscreen */}
