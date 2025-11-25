@@ -37,7 +37,13 @@ export function MediaCard({ item, type, className, showPlayOverlay = true }: Med
   };
 
   return (
-    <Link href={getItemLink()} className={cn('block', className)}>
+    <Link
+      href={getItemLink()}
+      className={cn(
+        'block min-w-[180px] sm:min-w-[200px] md:min-w-[220px] lg:min-w-[240px]',
+        className
+      )}
+    >
       <Card className="group bg-gray-900/50 border-gray-800 hover:border-red-500/50 transition-all duration-300 hover:scale-105 h-full flex flex-col">
         {/* Poster Image - Fixed aspect ratio */}
         <div className="relative aspect-[2/3] overflow-hidden rounded-t-lg flex-shrink-0">

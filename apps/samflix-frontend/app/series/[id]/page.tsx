@@ -164,7 +164,30 @@ export default function SeriesDetailPage() {
   );
 
   if (!series) {
-    return <div className="min-h-screen bg-black text-white">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <div className="container mx-auto px-4 py-8">
+          <div className="space-y-6">
+            {/* Hero Skeleton */}
+            <div className="h-[50vh] md:h-[60vh] bg-gray-800 animate-pulse rounded-lg" />
+
+            {/* Content Skeleton */}
+            <div className="space-y-4">
+              <div className="h-8 bg-gray-800 animate-pulse rounded w-3/4" />
+              <div className="h-4 bg-gray-800 animate-pulse rounded w-1/2" />
+              <div className="h-32 bg-gray-800 animate-pulse rounded" />
+
+              {/* Stats Skeleton */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="h-24 bg-gray-800 animate-pulse rounded" />
+                <div className="h-24 bg-gray-800 animate-pulse rounded" />
+                <div className="h-24 bg-gray-800 animate-pulse rounded" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const totalEpisodes = series.episodes.length;
@@ -418,11 +441,11 @@ export default function SeriesDetailPage() {
                 </TabsContent>
               </Tabs>
             </div>
+          </div>
 
-            {/* Recommendations Section */}
-            <div className="container mx-auto px-4 pb-8">
-              <RecommendationCarousel series={series} />
-            </div>
+          {/* Recommendations Section - Outside container for full width */}
+          <div className="container mx-auto px-4 pb-8 mt-8">
+            <RecommendationCarousel series={series} />
           </div>
         </>
       )}
