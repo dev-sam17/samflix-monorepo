@@ -550,8 +550,8 @@ export function HLSPlayer({
 
     const timeRemaining = duration - currentTime;
 
-    // Show overlay when less than 30 seconds remain
-    if (timeRemaining <= 30 && timeRemaining > 0 && !showNextEpisodeOverlay) {
+    // Show overlay when less than 120 seconds remain
+    if (timeRemaining <= 120 && timeRemaining > 0 && !showNextEpisodeOverlay) {
       setShowNextEpisodeOverlay(true);
       setCountdown(Math.floor(timeRemaining));
     }
@@ -563,6 +563,7 @@ export function HLSPlayer({
 
     // Autoplay next episode when current ends
     if (timeRemaining <= 0.5 && showNextEpisodeOverlay) {
+      setShowNextEpisodeOverlay(false);
       nextEpisode.onPlay?.();
     }
   }, [currentTime, duration, nextEpisode, showNextEpisodeOverlay]);
@@ -572,6 +573,7 @@ export function HLSPlayer({
   };
 
   const handlePlayNextNow = () => {
+    setShowNextEpisodeOverlay(false);
     nextEpisode?.onPlay?.();
   };
 
