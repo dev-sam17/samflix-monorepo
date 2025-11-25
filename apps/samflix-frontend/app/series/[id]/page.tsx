@@ -33,7 +33,7 @@ export default function SeriesDetailPage() {
   useEffect(() => {
     const fetchSeries = async () => {
       if (!apiBaseUrl) return;
-      const data = await api.client.series.getById(apiBaseUrl, id);
+      const data = await api.client.series.getById(id, apiBaseUrl);
       setSeries(data);
     };
     fetchSeries();

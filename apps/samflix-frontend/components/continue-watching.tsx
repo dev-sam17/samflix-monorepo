@@ -1,24 +1,25 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Play, Clock, MoreHorizontal, Trash2, Film, Tv, ChevronLeft, ChevronRight } from "lucide-react";
-import Link from "next/link";
-import Image from "next/image";
-import { api, clientApi } from "@/lib/api";
-import { useApiUrl } from "@/contexts/api-url-context";
-import { useUser } from "@clerk/nextjs";
-import { type Movie, type TvSeries, type Episode } from "@/lib/types";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
+} from '@/components/ui/dropdown-menu';
+import { Play, Clock, MoreHorizontal, Trash2, Film, Tv } from 'lucide-react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { api, clientApi } from '@/lib/api';
+import { useApiUrl } from '@/contexts/api-url-context';
+import { useUser } from '@clerk/nextjs';
+import { type Movie, type TvSeries, type Episode } from '@/lib/types';
+import { toast } from 'sonner';
+import { SwipeableCarousel } from '@/components/swipeable-carousel';
+import { cn } from '@/lib/utils';
 
 type MovieProgressItem = {
   tmdbId: string;
@@ -46,22 +47,8 @@ type ContinueWatchingItem = MovieProgressItem | SeriesProgressItem;
 export function ContinueWatching() {
   const [items, setItems] = useState<ContinueWatchingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const { user, isSignedIn } = useUser();
   const { apiBaseUrl } = useApiUrl();
-
-  // Responsive items per page
-  const itemsPerPage = 6; // Show 6 items at a time
-  const totalPages = Math.ceil(items.length / itemsPerPage);
-  const currentItems = items.slice(currentIndex * itemsPerPage, (currentIndex + 1) * itemsPerPage);
-
-  const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % totalPages);
-  };
-
-  const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + totalPages) % totalPages);
-  };
 
   useEffect(() => {
     const fetchContinueWatching = async () => {
@@ -72,12 +59,14 @@ export function ContinueWatching() {
 
       try {
         setIsLoading(true);
-        
+
         // Fetch movie progress
-        const movieProgress = await clientApi.progress.getAllProgress(apiBaseUrl, user.id).catch((error) => {
-          console.error("Error fetching movie progress:", error);
-          return [];
-        });
+        const movieProgress = await clientApi.progress
+          .getAllProgress(apiBaseUrl, user.id)
+          .catch((error) => {
+            console.error('Error fetching movie progress:', error);
+            return [];
+          });
 
         // Try to fetch series progress (may not be implemented yet)
         let seriesProgress: any[] = [];
@@ -86,7 +75,7 @@ export function ContinueWatching() {
             seriesProgress = await clientApi.progress.getAllSeriesProgress(apiBaseUrl, user.id);
           }
         } catch (error) {
-          console.error("Series progress API not available or failed:", error);
+          console.error('Series progress API not available or failed:', error);
           seriesProgress = [];
         }
 
@@ -107,7 +96,7 @@ export function ContinueWatching() {
               return {
                 ...item,
                 type: 'movie' as const,
-                movie
+                movie,
               } as MovieProgressItem;
             } catch (error) {
               console.error(`Error fetching movie ${item.tmdbId}:`, error);
@@ -122,13 +111,13 @@ export function ContinueWatching() {
             try {
               const series = await clientApi.series.getById(item.seriesId, apiBaseUrl);
               // Find the episode in the series
-              const episode = series.episodes.find(ep => ep.id.toString() === item.tmdbId);
-              
+              const episode = series.episodes.find((ep) => ep.id.toString() === item.tmdbId);
+
               return {
                 ...item,
                 type: 'series' as const,
                 series,
-                episode
+                episode,
               } as SeriesProgressItem;
             } catch (error) {
               console.error(`Error fetching series ${item.seriesId}:`, error);
@@ -140,14 +129,11 @@ export function ContinueWatching() {
         // Combine and filter out null items, then sort by updatedAt (most recent first)
         const allItems = [...movieItems, ...seriesItems]
           .filter((item): item is ContinueWatchingItem => item !== null)
-          .sort(
-            (a, b) =>
-              new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-          );
+          .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
         setItems(allItems);
       } catch (error) {
-        console.error("Error fetching continue watching data:", error);
+        console.error('Error fetching continue watching data:', error);
       } finally {
         setIsLoading(false);
       }
@@ -178,10 +164,10 @@ export function ContinueWatching() {
         })
       );
 
-      toast.success("Progress deleted successfully");
+      toast.success('Progress deleted successfully');
     } catch (error) {
-      console.error("Error deleting progress:", error);
-      toast.error("Failed to delete progress");
+      console.error('Error deleting progress:', error);
+      toast.error('Failed to delete progress');
     }
   };
 
@@ -191,35 +177,11 @@ export function ContinueWatching() {
   }
 
   return (
-    <section className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Continue Watching</h2>
-        {!isLoading && items.length > itemsPerPage && (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={prevSlide}
-              disabled={currentIndex === 0}
-              className="border-gray-600 text-gray-300 hover:bg-white/10 disabled:opacity-50"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={nextSlide}
-              disabled={currentIndex === totalPages - 1}
-              className="border-gray-600 text-gray-300 hover:bg-white/10 disabled:opacity-50"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        )}
-      </div>
+    <section className="space-y-4">
+      <h2 className="text-2xl md:text-3xl font-bold">Continue Watching</h2>
 
       {isLoading ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="animate-pulse">
               <div className="aspect-[2/3] bg-gray-800 rounded-lg mb-4" />
@@ -229,32 +191,16 @@ export function ContinueWatching() {
           ))}
         </div>
       ) : (
-        <div className="relative">
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 transition-all duration-300">
-            {currentItems.map((item) => (
-              <ContinueWatchingCard
-                key={item.type === 'movie' ? item.tmdbId : `${item.seriesId}-${item.tmdbId}`}
-                item={item}
-                onDelete={() => handleDeleteProgress(item)}
-              />
-            ))}
-          </div>
-          
-          {/* Pagination dots */}
-          {totalPages > 1 && (
-            <div className="flex justify-center mt-6 gap-2">
-              {Array.from({ length: totalPages }).map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentIndex(index)}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    index === currentIndex ? 'bg-red-600' : 'bg-gray-600 hover:bg-gray-500'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        <SwipeableCarousel showArrows={true} showDots={false}>
+          {items.map((item) => (
+            <ContinueWatchingCard
+              key={item.type === 'movie' ? item.tmdbId : `${item.seriesId}-${item.tmdbId}`}
+              item={item}
+              onDelete={() => handleDeleteProgress(item)}
+              className="flex-[0_0_50%] sm:flex-[0_0_33.333%] md:flex-[0_0_25%] lg:flex-[0_0_16.666%] min-w-0"
+            />
+          ))}
+        </SwipeableCarousel>
       )}
     </section>
   );
@@ -263,9 +209,11 @@ export function ContinueWatching() {
 function ContinueWatchingCard({
   item,
   onDelete,
+  className,
 }: {
   item: ContinueWatchingItem;
   onDelete: () => void;
+  className?: string;
 }) {
   // Format time as hours and minutes
   const formatTime = (seconds: number) => {
@@ -289,18 +237,15 @@ function ContinueWatchingCard({
   const getItemData = () => {
     if (item.type === 'movie') {
       const runtime = item.movie.runtime || 120;
-      const progressPercent = Math.min(
-        Math.round((item.currentTime / (runtime * 60)) * 100),
-        100
-      );
-      
+      const progressPercent = Math.min(Math.round((item.currentTime / (runtime * 60)) * 100), 100);
+
       return {
         title: item.movie.title,
         posterPath: item.movie.posterPath,
         href: `/movies/${item.movie.id}`,
         progressPercent,
         subtitle: `${Math.round(progressPercent)}% watched`,
-        badge: { icon: Film, text: "Movie" }
+        badge: { icon: Film, text: 'Movie' },
       };
     } else {
       // For series, we don't have episode runtime, so we'll estimate progress differently
@@ -310,16 +255,16 @@ function ContinueWatchingCard({
         Math.round((item.currentTime / estimatedEpisodeRuntime) * 100),
         100
       );
-      
+
       return {
         title: item.series.title,
         posterPath: item.series.posterPath,
         href: `/series/${item.series.id}`,
         progressPercent,
-        subtitle: item.episode 
+        subtitle: item.episode
           ? `S${item.seasonNumber}E${item.episodeNumber}: ${item.episodeTitle || item.episode.title}`
           : `${Math.round(progressPercent)}% watched`,
-        badge: { icon: Tv, text: "Series" }
+        badge: { icon: Tv, text: 'Series' },
       };
     }
   };
@@ -327,12 +272,12 @@ function ContinueWatchingCard({
   const itemData = getItemData();
 
   return (
-    <div className="relative group">
+    <div className={cn('relative group', className)}>
       <Link href={itemData.href}>
         <Card className="overflow-hidden bg-gray-900 border-gray-800 transition-all hover:scale-105 hover:border-gray-700">
           <div className="relative aspect-[2/3]">
             <Image
-              src={api.utils.getTmdbImageUrl(itemData.posterPath || "", "w500")}
+              src={api.utils.getTmdbImageUrl(itemData.posterPath || '', 'w500')}
               alt={itemData.title}
               fill
               className="object-cover"
@@ -357,10 +302,7 @@ function ContinueWatchingCard({
 
             <div className="absolute bottom-0 left-0 right-0 p-3">
               <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  className="bg-red-600 hover:bg-red-700 rounded-full w-8 h-8 p-0"
-                >
+                <Button size="sm" className="bg-red-600 hover:bg-red-700 rounded-full w-8 h-8 p-0">
                   <Play className="w-4 h-4" />
                 </Button>
                 <div className="text-xs text-gray-300 flex items-center">
@@ -372,9 +314,7 @@ function ContinueWatchingCard({
           </div>
           <CardContent className="p-3">
             <h3 className="font-medium text-sm truncate">{itemData.title}</h3>
-            <p className="text-xs text-gray-400 line-clamp-2">
-              {itemData.subtitle}
-            </p>
+            <p className="text-xs text-gray-400 line-clamp-2">{itemData.subtitle}</p>
           </CardContent>
         </Card>
       </Link>
@@ -395,10 +335,7 @@ function ContinueWatchingCard({
               <MoreHorizontal className="h-4 w-4 text-white" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            className="bg-gray-900 border-gray-700"
-          >
+          <DropdownMenuContent align="end" className="bg-gray-900 border-gray-700">
             <DropdownMenuItem
               onClick={handleDeleteClick}
               className="text-red-400 hover:text-red-300 hover:bg-gray-800 cursor-pointer"
