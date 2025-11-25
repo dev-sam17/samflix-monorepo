@@ -544,11 +544,11 @@ export function HLSPlayer({
     };
   }, []);
 
-  // Reset overlay when source changes (new episode)
+  // Reset overlay when source changes (new episode) or when next episode info changes
   useEffect(() => {
     setShowNextEpisodeOverlay(false);
     setCountdown(10);
-  }, [src]);
+  }, [src, nextEpisode?.title]);
 
   // Handle next episode countdown and autoplay
   useEffect(() => {
@@ -1129,10 +1129,11 @@ export function HLSPlayer({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
-                    className="bg-gray-900 border-gray-700 z-[9999] transition-none duration-0 animate-none"
+                    className="bg-gray-900 border-gray-700 !z-[99999] data-[state=open]:animate-none data-[state=closed]:animate-none"
                     align="end"
                     side="top"
                     sideOffset={8}
+                    container={containerRef.current}
                   >
                     <div className="p-2">
                       <h3 className="text-white font-semibold mb-2">Audio</h3>
@@ -1178,10 +1179,11 @@ export function HLSPlayer({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
-                    className="bg-gray-900 border-gray-700 z-[9999] transition-none duration-0 animate-none"
+                    className="bg-gray-900 border-gray-700 !z-[99999] data-[state=open]:animate-none data-[state=closed]:animate-none"
                     align="end"
                     side="top"
                     sideOffset={8}
+                    container={containerRef.current}
                   >
                     <div className="p-2">
                       <h3 className="text-white font-semibold mb-2">Subtitles</h3>
@@ -1232,10 +1234,11 @@ export function HLSPlayer({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
-                    className="bg-gray-900 border-gray-700 z-[9999] transition-none duration-0 animate-none"
+                    className="bg-gray-900 border-gray-700 !z-[99999] data-[state=open]:animate-none data-[state=closed]:animate-none"
                     align="end"
                     side="top"
                     sideOffset={8}
+                    container={containerRef.current}
                   >
                     <div className="p-2">
                       <h3 className="text-white font-semibold mb-2">Quality</h3>
