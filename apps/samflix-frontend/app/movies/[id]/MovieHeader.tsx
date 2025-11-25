@@ -57,6 +57,7 @@ export function MovieHeader({
   const { user } = useUser();
   const { apiBaseUrl } = useApiUrl();
 
+  console.log('a');
 
   // Fetch playback progress when component mounts
   useEffect(() => {
