@@ -212,7 +212,7 @@ export function HLSPlayer({
           width: level.width,
           bitrate: level.bitrate,
           level: index,
-          name: `${level.height}p (${Math.round(level.bitrate / 1000)}k)`,
+          name: `${level.height}p`,
         }));
         setAvailableQualityLevels(levels);
 
@@ -543,6 +543,12 @@ export function HLSPlayer({
       document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
     };
   }, []);
+
+  // Reset overlay when source changes (new episode)
+  useEffect(() => {
+    setShowNextEpisodeOverlay(false);
+    setCountdown(10);
+  }, [src]);
 
   // Handle next episode countdown and autoplay
   useEffect(() => {
@@ -969,9 +975,21 @@ export function HLSPlayer({
           isControlsVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
         )}
       >
-        {/* Center Play/Pause Button - Only show when playing */}
+        {/* Center Controls - Only show when playing */}
         {isPlaying && (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center gap-4 md:gap-8">
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                'rounded-full bg-white/10 hover:bg-white/20 text-white',
+                isMobile ? 'w-12 h-12' : 'w-16 h-16'
+              )}
+              onClick={() => seek(-10)}
+              aria-label="Rewind 10 seconds"
+            >
+              <SkipBack className={cn('h-6 w-6', isMobile ? 'h-5 w-5' : '')} />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -983,6 +1001,18 @@ export function HLSPlayer({
               aria-label="Pause video"
             >
               <Pause className={cn('h-8 w-8', isMobile ? 'h-6 w-6' : '')} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                'rounded-full bg-white/10 hover:bg-white/20 text-white',
+                isMobile ? 'w-12 h-12' : 'w-16 h-16'
+              )}
+              onClick={() => seek(10)}
+              aria-label="Forward 10 seconds"
+            >
+              <SkipForward className={cn('h-6 w-6', isMobile ? 'h-5 w-5' : '')} />
             </Button>
           </div>
         )}
@@ -1031,32 +1061,6 @@ export function HLSPlayer({
                 ) : (
                   <Play className={cn('h-5 w-5', isMobile ? 'h-6 w-6' : '')} />
                 )}
-              </Button>
-
-              {/* Skip Back */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn(
-                  'text-white hover:bg-white/20 flex-shrink-0',
-                  isMobile ? 'w-11 h-11 min-w-[44px] min-h-[44px]' : 'w-10 h-10'
-                )}
-                onClick={() => seek(-10)}
-              >
-                <SkipBack className={cn('h-5 w-5', isMobile ? 'h-6 w-6' : '')} />
-              </Button>
-
-              {/* Skip Forward */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn(
-                  'text-white hover:bg-white/20 flex-shrink-0',
-                  isMobile ? 'w-11 h-11 min-w-[44px] min-h-[44px]' : 'w-10 h-10'
-                )}
-                onClick={() => seek(10)}
-              >
-                <SkipForward className={cn('h-5 w-5', isMobile ? 'h-6 w-6' : '')} />
               </Button>
 
               {/* Volume Control - Hidden on mobile */}
@@ -1125,14 +1129,13 @@ export function HLSPlayer({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
-                    className="bg-gray-900 border-gray-700"
+                    className="bg-gray-900 border-gray-700 z-[9999] transition-none duration-0 animate-none"
                     align="end"
                     side="top"
                     sideOffset={8}
-                    style={{ zIndex: 99999 }}
                   >
                     <div className="p-2">
-                      <h3 className="text-white font-semibold mb-2">Audio Tracks</h3>
+                      <h3 className="text-white font-semibold mb-2">Audio</h3>
                       {availableAudioTracks.map((track, index) => (
                         <DropdownMenuItem
                           key={index}
@@ -1175,11 +1178,10 @@ export function HLSPlayer({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
-                    className="bg-gray-900 border-gray-700"
+                    className="bg-gray-900 border-gray-700 z-[9999] transition-none duration-0 animate-none"
                     align="end"
                     side="top"
                     sideOffset={8}
-                    style={{ zIndex: 99999 }}
                   >
                     <div className="p-2">
                       <h3 className="text-white font-semibold mb-2">Subtitles</h3>
@@ -1230,14 +1232,13 @@ export function HLSPlayer({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
-                    className="bg-gray-900 border-gray-700"
+                    className="bg-gray-900 border-gray-700 z-[9999] transition-none duration-0 animate-none"
                     align="end"
                     side="top"
                     sideOffset={8}
-                    style={{ zIndex: 99999 }}
                   >
                     <div className="p-2">
-                      <h3 className="text-white font-semibold mb-2">Quality Levels</h3>
+                      <h3 className="text-white font-semibold mb-2">Quality</h3>
                       <DropdownMenuItem
                         className="text-white hover:bg-white/10"
                         onClick={() => handleQualityLevelSelect(-1)}
