@@ -10,11 +10,61 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { api, clientApi } from '@/lib/api';
 import type { TvSeries, Episode } from '@/lib/types';
+import { TranscodeStatus } from '@/lib/types';
 import SeasonSection from './seasonSection';
 import { SeriesProgressButton, SeriesPlayer } from './SeriesProgressButton';
 import { useParams } from 'next/navigation';
 import { useApiUrl } from '@/contexts/api-url-context';
 import { useUser } from '@clerk/nextjs';
+import { SwipeableCarousel } from '@/components/swipeable-carousel';
+import { MediaCard } from '@/components/media-card';
+import { useApiWithContext } from '@/hooks/use-api-with-context';
+
+function RecommendationCarousel({ series }: { series: TvSeries }) {
+  // Get series from the same genres
+  const { data: recommendedSeries } = useApiWithContext(
+    (baseUrl) => () => {
+      if (!series.genres || series.genres.length === 0) {
+        return Promise.resolve({
+          data: [],
+          meta: { page: 1, limit: 0, total: 0, totalPages: 0 },
+        });
+      }
+      // Use the first genre to get recommendations
+      const genre = series.genres[0];
+      return api.client.series.getAll({
+        baseUrl,
+        limit: 20,
+        genre,
+        sortBy: 'rating',
+        sortOrder: 'desc',
+      });
+    },
+    [series.genres]
+  );
+
+  // Filter out the current series, only show completed series
+  const filteredSeries = (recommendedSeries?.data || []).filter(
+    (s: TvSeries) =>
+      s.id !== series.id &&
+      s.episodes.some((ep) => ep.transcodeStatus === TranscodeStatus.COMPLETED)
+  );
+
+  if (filteredSeries.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-4 mt-8">
+      <h2 className="text-xl md:text-2xl font-bold text-white">More Like This</h2>
+      <SwipeableCarousel>
+        {filteredSeries.map((recSeries: TvSeries) => (
+          <MediaCard key={recSeries.id} item={recSeries} type="series" />
+        ))}
+      </SwipeableCarousel>
+    </div>
+  );
+}
 
 export default function SeriesDetailPage() {
   const params = useParams();
@@ -367,6 +417,11 @@ export default function SeriesDetailPage() {
                   </div>
                 </TabsContent>
               </Tabs>
+            </div>
+
+            {/* Recommendations Section */}
+            <div className="container mx-auto px-4 pb-8">
+              <RecommendationCarousel series={series} />
             </div>
           </div>
         </>

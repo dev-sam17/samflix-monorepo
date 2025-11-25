@@ -1,20 +1,8 @@
 'use client';
 
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  ArrowLeft,
-  Star,
-  Calendar,
-  Clock,
-  Film,
-  Play,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { api } from '@/lib/api';
 import { useParams } from 'next/navigation';
 import type { Movie } from '@/lib/types';
@@ -22,6 +10,8 @@ import { TranscodeStatus } from '@/lib/types';
 import { useApiWithContext } from '@/hooks/use-api-with-context';
 import { useState, useCallback } from 'react';
 import { MovieHeader } from './MovieHeader';
+import { SwipeableCarousel } from '@/components/swipeable-carousel';
+import { MediaCard } from '@/components/media-card';
 
 function LoadingSkeleton() {
   return (
@@ -48,9 +38,6 @@ function LoadingSkeleton() {
 }
 
 function RecommendationCarousel({ movie }: { movie: Movie }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const itemsPerPage = 6;
-
   // Get movies from the same genres
   const { data: recommendedMovies } = useApiWithContext(
     (baseUrl) => () => {
@@ -74,20 +61,10 @@ function RecommendationCarousel({ movie }: { movie: Movie }) {
     [movie.genres]
   );
 
-  // Filter out the current movie, only show completed movies, and limit to 12 items
-  const filteredMovies = (recommendedMovies?.data || [])
-    .filter((m: Movie) => m.id !== movie.id && m.transcodeStatus === TranscodeStatus.COMPLETED)
-    .slice(0, 12);
-
-  const maxIndex = Math.max(0, filteredMovies.length - itemsPerPage);
-
-  const nextSlide = () => {
-    setCurrentIndex((prev) => Math.min(prev + 1, maxIndex));
-  };
-
-  const prevSlide = () => {
-    setCurrentIndex((prev) => Math.max(prev - 1, 0));
-  };
+  // Filter out the current movie, only show completed movies
+  const filteredMovies = (recommendedMovies?.data || []).filter(
+    (m: Movie) => m.id !== movie.id && m.transcodeStatus === TranscodeStatus.COMPLETED
+  );
 
   if (filteredMovies.length === 0) {
     return null;
@@ -95,111 +72,12 @@ function RecommendationCarousel({ movie }: { movie: Movie }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl md:text-2xl font-bold text-white">More Like This</h2>
-        <div className="flex items-center gap-2">
-          {filteredMovies.length > itemsPerPage && (
-            <>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={prevSlide}
-                disabled={currentIndex === 0}
-                className="border-gray-600 text-gray-300 hover:bg-white/10 disabled:opacity-50"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={nextSlide}
-                disabled={currentIndex >= maxIndex}
-                className="border-gray-600 text-gray-300 hover:bg-white/10 disabled:opacity-50"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className="relative overflow-hidden">
-        <div
-          className="flex transition-transform duration-300 ease-in-out gap-4"
-          style={{
-            transform: `translateX(-${(currentIndex / itemsPerPage) * 100}%)`,
-          }}
-        >
-          {filteredMovies.map((recMovie: Movie) => (
-            <Link
-              key={recMovie.id}
-              href={`/movies/${recMovie.id}`}
-              className="flex-shrink-0 w-[calc(50%-8px)] md:w-[calc(25%-12px)] lg:w-[calc(16.666%-14px)] group"
-            >
-              <Card className="bg-gray-900/50 border-gray-800 hover:border-red-500/50 transition-all duration-300 group-hover:scale-105">
-                <div className="relative aspect-[2/3] overflow-hidden rounded-t-lg">
-                  <Image
-                    src={api.utils.getTmdbImageUrl(recMovie.posterPath || '', 'w300')}
-                    alt={recMovie.title}
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-110"
-                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 16.666vw"
-                  />
-
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-colors duration-300 flex items-center justify-center">
-                    <Play className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </div>
-
-                  <Badge className="absolute top-2 left-2 bg-black/70 text-white border-gray-600">
-                    <Film className="w-3 h-3 mr-1" />
-                    Movie
-                  </Badge>
-
-                  {recMovie.rating && recMovie.rating > 0 && (
-                    <Badge className="absolute top-2 right-2 bg-black/70 text-yellow-400 border-yellow-400/50">
-                      <Star className="w-3 h-3 mr-1 fill-current" />
-                      {recMovie.rating.toFixed(1)}
-                    </Badge>
-                  )}
-                </div>
-
-                <CardContent className="p-3 space-y-2">
-                  <h3 className="font-semibold text-white text-sm line-clamp-2 group-hover:text-red-400 transition-colors">
-                    {recMovie.title}
-                  </h3>
-
-                  <div className="flex items-center justify-between text-xs text-gray-400">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {recMovie.year}
-                    </div>
-
-                    {recMovie.runtime && (
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {Math.floor(recMovie.runtime / 60)}h {recMovie.runtime % 60}m
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex gap-1 flex-wrap">
-                    {Array.isArray(recMovie.genres) &&
-                      recMovie.genres.slice(0, 2).map((genre: string) => (
-                        <Badge
-                          key={genre}
-                          variant="outline"
-                          className="text-xs border-gray-600 text-gray-300 px-1 py-0"
-                        >
-                          {genre}
-                        </Badge>
-                      ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </div>
+      <h2 className="text-xl md:text-2xl font-bold text-white">More Like This</h2>
+      <SwipeableCarousel>
+        {filteredMovies.map((recMovie: Movie) => (
+          <MediaCard key={recMovie.id} item={recMovie} type="movie" />
+        ))}
+      </SwipeableCarousel>
     </div>
   );
 }
