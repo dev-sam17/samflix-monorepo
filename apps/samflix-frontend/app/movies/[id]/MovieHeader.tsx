@@ -50,13 +50,13 @@ export function MovieHeader({
   useEffect(() => {
     const fetchProgress = async () => {
       if (!isAuthenticated || !user || !movie.tmdbId) return;
+      if (!apiBaseUrl) {
+        console.error('API base URL is not configured');
+        return;
+      }
 
       try {
         setIsLoading(true);
-        if (!apiBaseUrl) {
-          console.error('API base URL is not configured');
-          return;
-        }
         // Fetch user's progress for this movie
         // Note: 404 responses are normal for unwatched movies and are handled gracefully
         const progress = await clientApi.progress.getProgress(

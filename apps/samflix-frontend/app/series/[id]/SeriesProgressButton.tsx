@@ -140,14 +140,13 @@ export function SeriesProgressButton({
   useEffect(() => {
     const fetchProgress = async () => {
       if (!isAuthenticated || !user || !series.id) return;
+      if (!apiBaseUrl) {
+        console.error('API base URL is not configured');
+        return;
+      }
 
       try {
         setIsLoading(true);
-        if (!apiBaseUrl) {
-          console.error('API base URL is not configured');
-          return;
-        }
-
         const progress = await clientApi.progress.getSeriesProgress(apiBaseUrl, user.id, series.id);
 
         if (progress) {
