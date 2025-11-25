@@ -136,34 +136,41 @@ export function SeriesProgressButton({
     return completedEpisodes[0] || null;
   }, [series.episodes]);
 
-  // Fetch series progress when component mounts
-  useEffect(() => {
-    const fetchProgress = async () => {
-      if (!isAuthenticated || !user || !series.id) return;
-      if (!apiBaseUrl) {
-        console.error('API base URL is not configured');
-        return;
+  // Fetch series progress when component mounts and when player closes
+  const fetchProgress = useCallback(async () => {
+    if (!isAuthenticated || !user || !series.id) return;
+    if (!apiBaseUrl) {
+      console.error('API base URL is not configured');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const progress = await clientApi.progress.getSeriesProgress(apiBaseUrl, user.id, series.id);
+
+      if (progress) {
+        setSeriesProgress(progress);
+        // Find the episode that matches the progress
+        const episode = series.episodes.find((ep) => ep.id.toString() === progress.tmdbId);
+        setCurrentEpisode(episode || null);
       }
-
-      try {
-        setIsLoading(true);
-        const progress = await clientApi.progress.getSeriesProgress(apiBaseUrl, user.id, series.id);
-
-        if (progress) {
-          setSeriesProgress(progress);
-          // Find the episode that matches the progress
-          const episode = series.episodes.find((ep) => ep.id.toString() === progress.tmdbId);
-          setCurrentEpisode(episode || null);
-        }
-      } catch (error) {
-        console.error('Error fetching series progress:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProgress();
+    } catch (error) {
+      console.error('Error fetching series progress:', error);
+    } finally {
+      setIsLoading(false);
+    }
   }, [isAuthenticated, user, series.id, apiBaseUrl, series.episodes]);
+
+  useEffect(() => {
+    fetchProgress();
+  }, [fetchProgress]);
+
+  // Refetch progress when player closes
+  useEffect(() => {
+    if (!isPlayerOpen && isAuthenticated) {
+      fetchProgress();
+    }
+  }, [isPlayerOpen, isAuthenticated, fetchProgress]);
 
   // Handle saving series progress
   const handleTimeUpdate = useCallback(

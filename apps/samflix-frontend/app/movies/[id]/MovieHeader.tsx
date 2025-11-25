@@ -46,40 +46,47 @@ export function MovieHeader({
   const { user } = useUser();
   const { apiBaseUrl } = useApiUrl();
 
-  // Fetch playback progress when component mounts
+  // Fetch playback progress when component mounts and when player closes
+  const fetchProgress = useCallback(async () => {
+    if (!isAuthenticated || !user || !movie.tmdbId) return;
+    if (!apiBaseUrl) {
+      console.error('API base URL is not configured');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      // Fetch user's progress for this movie
+      // Note: 404 responses are normal for unwatched movies and are handled gracefully
+      const progress = await clientApi.progress.getProgress(
+        apiBaseUrl,
+        user.id,
+        movie.id.toString()
+      );
+      if (progress && progress.currentTime > 0) {
+        setPlaybackProgress(progress.currentTime);
+      } else {
+        setPlaybackProgress(0);
+      }
+    } catch (error) {
+      // The getProgress function already handles 404s by returning null
+      // This catch block should only handle unexpected errors
+      console.error('Unexpected error fetching playback progress:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isAuthenticated, user, movie.tmdbId, movie.id, apiBaseUrl]);
+
   useEffect(() => {
-    const fetchProgress = async () => {
-      if (!isAuthenticated || !user || !movie.tmdbId) return;
-      if (!apiBaseUrl) {
-        console.error('API base URL is not configured');
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        // Fetch user's progress for this movie
-        // Note: 404 responses are normal for unwatched movies and are handled gracefully
-        const progress = await clientApi.progress.getProgress(
-          apiBaseUrl,
-          user.id,
-          movie.id.toString()
-        );
-        if (progress && progress.currentTime > 0) {
-          setPlaybackProgress(progress.currentTime);
-        } else {
-          setPlaybackProgress(0);
-        }
-      } catch (error) {
-        // The getProgress function already handles 404s by returning null
-        // This catch block should only handle unexpected errors
-        console.error('Unexpected error fetching playback progress:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchProgress();
-  }, [isAuthenticated, user, movie.id, apiBaseUrl]);
+  }, [fetchProgress]);
+
+  // Refetch progress when player closes
+  useEffect(() => {
+    if (!isPlayerOpen && isAuthenticated) {
+      fetchProgress();
+    }
+  }, [isPlayerOpen, isAuthenticated, fetchProgress]);
 
   // Handle saving playback progress
   const handleTimeUpdate = useCallback(
