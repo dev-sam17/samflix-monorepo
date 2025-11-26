@@ -1,38 +1,34 @@
-# Use Node.js LTS as the base image
-FROM node:22-slim
-
-# Set noninteractive mode to avoid prompts
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Install openssl properly
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    openssl \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# Create app directory
+# ---- Builder image ----
+FROM node:22-alpine AS builder
 WORKDIR /app
 
-# Set GITHUB_TOKEN environment variable
-ARG GITHUB_TOKEN
+# Install pnpm
+RUN corepack enable
 
-# Install dependencies first (for better caching)
-RUN echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> ~/.npmrc
-COPY package.json pnpm-lock.yaml .npmrc ./
-RUN pnpm install
+# Copy monorepo files (only what's needed)
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json .npmrc ./
+COPY apps/samflix-backend ./apps/samflix-backend
+COPY packages/prisma-client-for-samflix ./packages/prisma-client-for-samflix
 
-# Copy source code
-COPY . .
+RUN pnpm install --frozen-lockfile
 
-# Build TypeScript code
-RUN pnpm build
+# Build Prisma client + backend
+RUN pnpm turbo run prisma:generate --filter=@samflix/prisma-client
+RUN pnpm turbo run build --filter=@samflix/backend
 
-# Expose the port the app runs on
+# ---- Runtime image ----
+FROM node:22-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Copy only built backend
+COPY --from=builder /app/apps/samflix-backend/dist ./dist
+COPY --from=builder /app/apps/samflix-backend/package.json ./
+
+# Install only prod deps for backend
+RUN corepack enable \
+    && pnpm install --prod --filter @samflix/backend...
+
 EXPOSE 3000
-
-# Command to run the app
-CMD ["pnpm", "start"]
+CMD ["node", "dist/index.js"]
