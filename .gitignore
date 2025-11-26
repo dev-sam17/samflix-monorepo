@@ -14,3 +14,9 @@ packages/*/yarn.lock
 
 apps/*/pnpm-lock.yaml
 packages/*/pnpm-lock.yaml
+
+.env
+.env.local
+.env.production
+apps/*/.env*
+
