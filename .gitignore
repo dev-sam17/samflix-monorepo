@@ -20,3 +20,4 @@ packages/*/pnpm-lock.yaml
 .env.production
 apps/*/.env*
 
+compose.prod.yml
