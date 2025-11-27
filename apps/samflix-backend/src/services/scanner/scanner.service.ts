@@ -1,24 +1,16 @@
-import fs from "fs";
-import path from "path";
-import { prisma } from "../../app";
-import { parserService } from "../parser/parser.service";
-import { tmdbService } from "../tmdb/tmdb.service";
-import { CacheInvalidationService } from "../../api/middleware/cache-invalidation";
-import {
-  ScannerConfig,
-  TMDBMovieResult,
-  TMDBTVResult,
-} from "../../types/media.types";
+import fs from 'fs';
+import path from 'path';
+import { prisma } from '../../app';
+import { parserService } from '../parser/parser.service';
+import { tmdbService } from '../tmdb/tmdb.service';
+import { CacheInvalidationService } from '../../api/middleware/cache-invalidation';
+import { ScannerConfig, TMDBMovieResult, TMDBTVResult } from '../../types/media.types';
 
 // Define a type for progress callback
-type ProgressCallback = (
-  status: string,
-  progress: number,
-  details?: any
-) => void;
+type ProgressCallback = (status: string, progress: number, details?: any) => void;
 
 class ScannerService {
-  private readonly supportedExtensions: string[] = [".mp4", ".mkv", ".avi"];
+  private readonly supportedExtensions: string[] = ['.mp4', '.mkv', '.avi'];
 
   /**
    * Scans all configured media directories and cleans up orphaned entries
@@ -28,22 +20,14 @@ class ScannerService {
    */
   async scanAll(config: ScannerConfig, progressCallback?: ProgressCallback) {
     try {
-      const reportProgress = (
-        status: string,
-        progress: number,
-        details?: any
-      ) => {
-        console.log(
-          `${status}: ${progress}%${
-            details ? ` - ${JSON.stringify(details)}` : ""
-          }`
-        );
+      const reportProgress = (status: string, progress: number, details?: any) => {
+        console.log(`${status}: ${progress}%${details ? ` - ${JSON.stringify(details)}` : ''}`);
         if (progressCallback) {
           progressCallback(status, progress, details);
         }
       };
 
-      reportProgress("Starting media scan", 0);
+      reportProgress('Starting media scan', 0);
 
       // Count total paths to calculate progress
       const totalPaths = config.moviePaths.length + config.seriesPaths.length;
@@ -51,21 +35,21 @@ class ScannerService {
 
       // First scan all directories for new media
       for (let i = 0; i < config.moviePaths.length; i++) {
-        const moviePath = config.moviePaths[i];
-        reportProgress(
-          "Scanning movie directory",
-          Math.floor((completedPaths / totalPaths) * 70),
-          { path: moviePath, current: i + 1, total: config.moviePaths.length }
-        );
+        const moviePath = config.moviePaths[i]!;
+        reportProgress('Scanning movie directory', Math.floor((completedPaths / totalPaths) * 70), {
+          path: moviePath,
+          current: i + 1,
+          total: config.moviePaths.length,
+        });
 
         await this.scanMovieDirectory(moviePath);
         completedPaths++;
       }
 
       for (let i = 0; i < config.seriesPaths.length; i++) {
-        const seriesPath = config.seriesPaths[i];
+        const seriesPath = config.seriesPaths[i]!;
         reportProgress(
-          "Scanning series directory",
+          'Scanning series directory',
           Math.floor((completedPaths / totalPaths) * 70),
           { path: seriesPath, current: i + 1, total: config.seriesPaths.length }
         );
@@ -75,25 +59,21 @@ class ScannerService {
       }
 
       // Then check for and clean up orphaned entries
-      reportProgress("Checking for orphaned media entries", 75);
-      const cleanupResults = await this.cleanupOrphanedEntries(
-        progressCallback
-      );
+      reportProgress('Checking for orphaned media entries', 75);
+      const cleanupResults = await this.cleanupOrphanedEntries(progressCallback);
 
       // Delete resolved conflicts after moving data to collections
-      reportProgress("Cleaning up resolved conflicts", 95);
+      reportProgress('Cleaning up resolved conflicts', 95);
       await this.deleteResolvedConflicts();
 
       // Invalidate conflicts cache so new scan results are visible
-      await CacheInvalidationService.clearPattern(
-        "cache:/api/scanner/conflicts*"
-      );
-      console.log("Cleared conflicts cache after scan");
+      await CacheInvalidationService.clearPattern('cache:/api/scanner/conflicts*');
+      console.log('Cleared conflicts cache after scan');
 
-      reportProgress("Media scan and cleanup completed", 100, cleanupResults);
+      reportProgress('Media scan and cleanup completed', 100, cleanupResults);
       return cleanupResults;
     } catch (error) {
-      console.error("Error during media scan:", error);
+      console.error('Error during media scan:', error);
       throw error;
     }
   }
@@ -132,11 +112,11 @@ class ScannerService {
       }
 
       // Finally check by title and year (escape special characters)
-      const sanitizedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const sanitizedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const titleQuery: any = {
         title: {
           contains: sanitizedTitle,
-          mode: "insensitive",
+          mode: 'insensitive',
         },
       };
 
@@ -150,8 +130,8 @@ class ScannerService {
 
       return !!existingByTitle;
     } catch (error) {
-      console.error("Error checking if movie exists in database:", error);
-      console.error("Problematic values:", { fileName, filePath, title, year });
+      console.error('Error checking if movie exists in database:', error);
+      console.error('Problematic values:', { fileName, filePath, title, year });
       return false;
     }
   }
@@ -183,10 +163,7 @@ class ScannerService {
       }
 
       // Finally check by series name, season, and episode number
-      const sanitizedSeriesName = seriesName.replace(
-        /[.*+?^${}()|[\]\\]/g,
-        "\\$&"
-      );
+      const sanitizedSeriesName = seriesName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const existingByDetails = await prisma.episode.findFirst({
         where: {
           AND: [
@@ -194,7 +171,7 @@ class ScannerService {
               series: {
                 title: {
                   contains: sanitizedSeriesName,
-                  mode: "insensitive",
+                  mode: 'insensitive',
                 },
               },
             },
@@ -209,8 +186,8 @@ class ScannerService {
 
       return !!existingByDetails;
     } catch (error) {
-      console.error("Error checking if episode exists in database:", error);
-      console.error("Problematic values:", {
+      console.error('Error checking if episode exists in database:', error);
+      console.error('Problematic values:', {
         fileName,
         filePath,
         seriesName,
@@ -230,12 +207,7 @@ class ScannerService {
         if (!parsedMovie) {
           console.warn(`Unable to parse movie file: ${file}`);
           // Create a conflict for unparseable files so user can manually resolve
-          await this.createScanningConflict(
-            "movie",
-            path.basename(file),
-            file,
-            []
-          );
+          await this.createScanningConflict('movie', path.basename(file), file, []);
           continue;
         }
 
@@ -251,14 +223,11 @@ class ScannerService {
         }
 
         // Search TMDB
-        const searchResults = await tmdbService.searchMovie(
-          parsedMovie.title,
-          parsedMovie.year
-        );
+        const searchResults = await tmdbService.searchMovie(parsedMovie.title, parsedMovie.year);
 
         if (searchResults.length === 0) {
           await this.createScanningConflict(
-            "movie",
+            'movie',
             parsedMovie.fileName,
             parsedMovie.filePath,
             []
@@ -268,7 +237,7 @@ class ScannerService {
 
         if (searchResults.length > 1) {
           await this.createScanningConflict(
-            "movie",
+            'movie',
             parsedMovie.fileName,
             parsedMovie.filePath,
             searchResults
@@ -276,9 +245,7 @@ class ScannerService {
           continue;
         }
 
-        const movieDetails = await tmdbService.getMovieDetails(
-          searchResults[0].id
-        );
+        const movieDetails = await tmdbService.getMovieDetails(searchResults[0]!.id);
 
         // Create or update movie in database
         await prisma.movie.upsert({
@@ -353,13 +320,11 @@ class ScannerService {
         }
 
         // Search TMDB
-        const searchResults = await tmdbService.searchTV(
-          parsedEpisode.seriesName
-        );
+        const searchResults = await tmdbService.searchTV(parsedEpisode.seriesName);
 
         if (searchResults.length === 0) {
           await this.createScanningConflict(
-            "series",
+            'series',
             parsedEpisode.fileName,
             parsedEpisode.filePath,
             []
@@ -369,7 +334,7 @@ class ScannerService {
 
         if (searchResults.length > 1) {
           await this.createScanningConflict(
-            "series",
+            'series',
             parsedEpisode.fileName,
             parsedEpisode.filePath,
             searchResults
@@ -377,30 +342,25 @@ class ScannerService {
           continue;
         }
 
-        const seriesDetails = await tmdbService.getTVDetails(
-          searchResults[0].id
-        );
+        const seriesDetails = await tmdbService.getTVDetails(searchResults[0]!.id);
 
         // Try to get episode details, handle 404 if episode doesn't exist in TMDB
         let episodeDetails;
         try {
           episodeDetails = await tmdbService.getEpisodeDetails(
-            searchResults[0].id,
+            searchResults[0]!.id,
             parsedEpisode.seasonNumber,
             parsedEpisode.episodeNumber
           );
         } catch (episodeError: any) {
           // If episode not found in TMDB (404), create a conflict
-          if (
-            episodeError.response?.status === 404 ||
-            episodeError.status === 404
-          ) {
+          if (episodeError.response?.status === 404 || episodeError.status === 404) {
             console.warn(
               `Episode not found in TMDB: ${parsedEpisode.seriesName} S${parsedEpisode.seasonNumber}E${parsedEpisode.episodeNumber} - Series found but episode doesn't exist in TMDB database`
             );
             // Create conflict with the series match but note that the specific episode wasn't found
             await this.createScanningConflict(
-              "series",
+              'series',
               parsedEpisode.fileName,
               parsedEpisode.filePath,
               [] // Empty array since the series exists but episode doesn't
@@ -442,9 +402,7 @@ class ScannerService {
           provider: parsedEpisode.provider,
           seasonNumber: episodeDetails.season_number,
           episodeNumber: episodeDetails.episode_number,
-          airDate: episodeDetails.air_date
-            ? new Date(episodeDetails.air_date)
-            : null,
+          airDate: episodeDetails.air_date ? new Date(episodeDetails.air_date) : null,
           seriesId: series.id,
         };
 
@@ -490,8 +448,7 @@ class ScannerService {
       );
 
       // Extract series name from folder name using improved algorithm
-      const extractedSeriesName =
-        this.extractSeriesNameFromFolder(seriesFolderName);
+      const extractedSeriesName = this.extractSeriesNameFromFolder(seriesFolderName);
       console.log(
         `Extracted series name: "${extractedSeriesName}" from folder: "${seriesFolderName}"`
       );
@@ -500,34 +457,26 @@ class ScannerService {
       let searchResults: any[] = [];
       try {
         searchResults = await tmdbService.searchTV(extractedSeriesName);
-        console.log(
-          `Found ${searchResults.length} TMDB matches for: "${extractedSeriesName}"`
-        );
+        console.log(`Found ${searchResults.length} TMDB matches for: "${extractedSeriesName}"`);
 
         // If no results, try with cleaned name (remove year, quality info, etc.)
         if (searchResults.length === 0) {
-          const cleanedName =
-            this.cleanSeriesNameForSearch(extractedSeriesName);
+          const cleanedName = this.cleanSeriesNameForSearch(extractedSeriesName);
           if (cleanedName !== extractedSeriesName) {
             console.log(`Retrying search with cleaned name: "${cleanedName}"`);
             searchResults = await tmdbService.searchTV(cleanedName);
-            console.log(
-              `Found ${searchResults.length} TMDB matches for cleaned name`
-            );
+            console.log(`Found ${searchResults.length} TMDB matches for cleaned name`);
           }
         }
       } catch (error) {
-        console.error(
-          `Error searching TMDB for series: ${extractedSeriesName}`,
-          error
-        );
+        console.error(`Error searching TMDB for series: ${extractedSeriesName}`, error);
       }
 
       // Create conflict with search results
       await this.createScanningConflict(
-        "series",
+        'series',
         `${seriesFolderName} (${files.length} episodes)`,
-        files[0], // Use first file as primary path
+        files[0]!, // Use first file as primary path
         searchResults
       );
     }
@@ -557,7 +506,7 @@ class ScannerService {
   }
 
   private async createScanningConflict(
-    mediaType: "movie" | "series",
+    mediaType: 'movie' | 'series',
     fileName: string,
     filePath: string,
     possibleMatches: (TMDBMovieResult | TMDBTVResult)[]
@@ -595,7 +544,7 @@ class ScannerService {
         });
       }
     } catch (error) {
-      console.error("Error creating/updating scanning conflict:", error);
+      console.error('Error creating/updating scanning conflict:', error);
       throw error;
     }
   }
@@ -614,7 +563,7 @@ class ScannerService {
       });
 
       if (!conflictDetails) {
-        throw new Error("Conflict not found");
+        throw new Error('Conflict not found');
       }
 
       // Update the conflict as resolved
@@ -627,7 +576,7 @@ class ScannerService {
       });
 
       // Add the media to the database based on the conflict type
-      if (conflictDetails.mediaType === "movie") {
+      if (conflictDetails.mediaType === 'movie') {
         // Get movie details from TMDB
         const movieDetails = await tmdbService.getMovieDetails(selectedId);
 
@@ -669,14 +618,12 @@ class ScannerService {
             },
           });
         }
-      } else if (conflictDetails.mediaType === "series") {
+      } else if (conflictDetails.mediaType === 'series') {
         // Get series details from TMDB
         const seriesDetails = await tmdbService.getTVDetails(selectedId);
 
         // Parse the file to get episode information
-        const parsedEpisode = parserService.parseEpisode(
-          conflictDetails.filePath
-        );
+        const parsedEpisode = parserService.parseEpisode(conflictDetails.filePath);
 
         if (parsedEpisode && seriesDetails) {
           // Get episode details
@@ -718,9 +665,7 @@ class ScannerService {
               provider: parsedEpisode.provider,
               seasonNumber: episodeDetails.season_number,
               episodeNumber: episodeDetails.episode_number,
-              airDate: episodeDetails.air_date
-                ? new Date(episodeDetails.air_date)
-                : null,
+              airDate: episodeDetails.air_date ? new Date(episodeDetails.air_date) : null,
               seriesId: series.id,
             };
 
@@ -759,7 +704,7 @@ class ScannerService {
 
       return conflict;
     } catch (error) {
-      console.error("Error resolving conflict:", error);
+      console.error('Error resolving conflict:', error);
       throw error;
     }
   }
@@ -777,7 +722,7 @@ class ScannerService {
       });
 
       if (!conflict) {
-        throw new Error("Conflict not found");
+        throw new Error('Conflict not found');
       }
 
       // Delete the conflict
@@ -785,9 +730,9 @@ class ScannerService {
         where: { id: conflictId },
       });
 
-      return { message: "Conflict deleted successfully" };
+      return { message: 'Conflict deleted successfully' };
     } catch (error) {
-      console.error("Error deleting conflict:", error);
+      console.error('Error deleting conflict:', error);
       throw error;
     }
   }
@@ -804,11 +749,11 @@ class ScannerService {
       });
 
       return {
-        message: "All conflicts deleted successfully",
+        message: 'All conflicts deleted successfully',
         count: result.count,
       };
     } catch (error) {
-      console.error("Error deleting all conflicts:", error);
+      console.error('Error deleting all conflicts:', error);
       throw error;
     }
   }
@@ -827,11 +772,11 @@ class ScannerService {
 
       console.log(`Deleted ${result.count} resolved conflicts`);
       return {
-        message: "Resolved conflicts deleted successfully",
+        message: 'Resolved conflicts deleted successfully',
         count: result.count,
       };
     } catch (error) {
-      console.error("Error deleting resolved conflicts:", error);
+      console.error('Error deleting resolved conflicts:', error);
       throw error;
     }
   }
@@ -843,32 +788,24 @@ class ScannerService {
    */
   private async cleanupOrphanedEntries(progressCallback?: ProgressCallback) {
     try {
-      const reportProgress = (
-        status: string,
-        progress: number,
-        details?: any
-      ) => {
-        console.log(
-          `${status}: ${progress}%${
-            details ? ` - ${JSON.stringify(details)}` : ""
-          }`
-        );
+      const reportProgress = (status: string, progress: number, details?: any) => {
+        console.log(`${status}: ${progress}%${details ? ` - ${JSON.stringify(details)}` : ''}`);
         if (progressCallback) {
           progressCallback(status, progress, details);
         }
       };
 
       // Check for deleted movies
-      reportProgress("Checking for deleted movies", 80);
+      reportProgress('Checking for deleted movies', 80);
       const missingMovies = await this.checkForDeletedMovies();
       console.log(`Found ${missingMovies.length} missing movie files`);
 
       // Remove each missing movie
       for (let i = 0; i < missingMovies.length; i++) {
-        const movie = missingMovies[i];
+        const movie = missingMovies[i]!;
         try {
           reportProgress(
-            "Removing orphaned movies",
+            'Removing orphaned movies',
             80 + Math.floor((i / missingMovies.length) * 5),
             { current: i + 1, total: missingMovies.length, title: movie.title }
           );
@@ -881,16 +818,16 @@ class ScannerService {
       }
 
       // Check for deleted episodes
-      reportProgress("Checking for deleted episodes", 85);
+      reportProgress('Checking for deleted episodes', 85);
       const missingEpisodes = await this.checkForDeletedEpisodes();
       console.log(`Found ${missingEpisodes.length} missing episode files`);
 
       // Remove each missing episode
       for (let i = 0; i < missingEpisodes.length; i++) {
-        const episode = missingEpisodes[i];
+        const episode = missingEpisodes[i]!;
         try {
           reportProgress(
-            "Removing orphaned episodes",
+            'Removing orphaned episodes',
             85 + Math.floor((i / missingEpisodes.length) * 5),
             {
               current: i + 1,
@@ -904,15 +841,12 @@ class ScannerService {
             `Removed orphaned episode: ${episode.title} (S${episode.seasonNumber}E${episode.episodeNumber})`
           );
         } catch (error) {
-          console.error(
-            `Failed to remove orphaned episode ${episode.id}:`,
-            error
-          );
+          console.error(`Failed to remove orphaned episode ${episode.id}:`, error);
         }
       }
 
       // Check for TV series with no episodes
-      reportProgress("Checking for empty TV series", 90);
+      reportProgress('Checking for empty TV series', 90);
       const emptySeries = await prisma.tvSeries.findMany({
         where: {
           episodes: {
@@ -927,10 +861,10 @@ class ScannerService {
 
       // Remove each empty series
       for (let i = 0; i < emptySeries.length; i++) {
-        const series = emptySeries[i];
+        const series = emptySeries[i]!;
         try {
           reportProgress(
-            "Removing empty TV series",
+            'Removing empty TV series',
             90 + Math.floor((i / emptySeries.length) * 5),
             { current: i + 1, total: emptySeries.length, title: series.title }
           );
@@ -940,14 +874,11 @@ class ScannerService {
           });
           console.log(`Removed empty TV series: ${series.title}`);
         } catch (error) {
-          console.error(
-            `Failed to remove empty TV series ${series.id}:`,
-            error
-          );
+          console.error(`Failed to remove empty TV series ${series.id}:`, error);
         }
       }
 
-      reportProgress("Cleanup completed", 95);
+      reportProgress('Cleanup completed', 95);
 
       return {
         removedMovies: missingMovies.length,
@@ -955,7 +886,7 @@ class ScannerService {
         removedSeries: emptySeries.length,
       };
     } catch (error) {
-      console.error("Error cleaning up orphaned entries:", error);
+      console.error('Error cleaning up orphaned entries:', error);
       throw error;
     }
   }
@@ -995,17 +926,14 @@ class ScannerService {
 
       // Check each movie to see if the file still exists
       for (const movie of movies) {
-        if (
-          movie.filePath &&
-          !(await this.isFileExistsOnDisk(movie.filePath))
-        ) {
+        if (movie.filePath && !(await this.isFileExistsOnDisk(movie.filePath))) {
           missingMovies.push(movie);
         }
       }
 
       return missingMovies;
     } catch (error) {
-      console.error("Error checking for deleted movies:", error);
+      console.error('Error checking for deleted movies:', error);
       throw error;
     }
   }
@@ -1038,17 +966,14 @@ class ScannerService {
 
       // Check each episode to see if the file still exists
       for (const episode of episodes) {
-        if (
-          episode.filePath &&
-          !(await this.isFileExistsOnDisk(episode.filePath))
-        ) {
+        if (episode.filePath && !(await this.isFileExistsOnDisk(episode.filePath))) {
           missingEpisodes.push(episode);
         }
       }
 
       return missingEpisodes;
     } catch (error) {
-      console.error("Error checking for deleted episodes:", error);
+      console.error('Error checking for deleted episodes:', error);
       throw error;
     }
   }
@@ -1065,12 +990,12 @@ class ScannerService {
       });
 
       if (!movie) {
-        throw new Error("Movie not found");
+        throw new Error('Movie not found');
       }
 
       // Check if the file exists
       if (movie.filePath && (await this.isFileExistsOnDisk(movie.filePath))) {
-        throw new Error("Movie file still exists on disk");
+        throw new Error('Movie file still exists on disk');
       }
 
       // Delete the movie from the database
@@ -1078,9 +1003,9 @@ class ScannerService {
         where: { id: movieId },
       });
 
-      return { message: "Movie removed successfully" };
+      return { message: 'Movie removed successfully' };
     } catch (error) {
-      console.error("Error removing deleted movie:", error);
+      console.error('Error removing deleted movie:', error);
       throw error;
     }
   }
@@ -1097,15 +1022,12 @@ class ScannerService {
       });
 
       if (!episode) {
-        throw new Error("Episode not found");
+        throw new Error('Episode not found');
       }
 
       // Check if the file exists
-      if (
-        episode.filePath &&
-        (await this.isFileExistsOnDisk(episode.filePath))
-      ) {
-        throw new Error("Episode file still exists on disk");
+      if (episode.filePath && (await this.isFileExistsOnDisk(episode.filePath))) {
+        throw new Error('Episode file still exists on disk');
       }
 
       // Delete the episode from the database
@@ -1113,9 +1035,9 @@ class ScannerService {
         where: { id: episodeId },
       });
 
-      return { message: "Episode removed successfully" };
+      return { message: 'Episode removed successfully' };
     } catch (error) {
-      console.error("Error removing deleted episode:", error);
+      console.error('Error removing deleted episode:', error);
       throw error;
     }
   }
@@ -1126,26 +1048,26 @@ class ScannerService {
    */
   private extractSeriesNameFromFolder(folderName: string): string {
     // Remove file extension if present
-    let name = folderName.replace(/\.(mkv|mp4|avi)$/i, "");
+    let name = folderName.replace(/\.(mkv|mp4|avi)$/i, '');
 
     // Remove season indicators (S01, S02, etc.) and everything after
-    name = name.replace(/[\s\.\-\_]+[Ss]\d{1,2}.*$/i, "");
+    name = name.replace(/[\s.\-_]+[Ss]\d{1,2}.*$/i, '');
 
     // Remove year in parentheses and everything after: (2025) Hindi 1080p...
-    name = name.replace(/\s*\(\d{4}\).*$/i, "");
+    name = name.replace(/\s*\(\d{4}\).*$/i, '');
 
     // Remove year without parentheses: 2025 Hindi 1080p...
-    name = name.replace(/\s+\d{4}\s+.*$/i, "");
+    name = name.replace(/\s+\d{4}\s+.*$/i, '');
 
     // Remove common quality indicators and everything after
     name = name.replace(
       /\s+(1080p|720p|480p|2160p|4K|WEBRip|WEB-DL|BluRay|BRRip|HDRip|DVDRip).*$/i,
-      ""
+      ''
     );
 
     // Clean up separators
-    name = name.replace(/[\._]/g, " ");
-    name = name.replace(/\s+/g, " ");
+    name = name.replace(/[._]/g, ' ');
+    name = name.replace(/\s+/g, ' ');
     name = name.trim();
 
     return name;
@@ -1161,17 +1083,17 @@ class ScannerService {
     // Remove language indicators
     cleaned = cleaned.replace(
       /\s+(Hindi|English|Tamil|Telugu|Malayalam|Kannada|Bengali)\s*/gi,
-      " "
+      ' '
     );
 
     // Remove "The" from the beginning if it exists (TMDB sometimes doesn't include it)
-    cleaned = cleaned.replace(/^The\s+/i, "");
+    cleaned = cleaned.replace(/^The\s+/i, '');
 
     // Remove common suffixes
-    cleaned = cleaned.replace(/\s+(Series|Show|Season)$/i, "");
+    cleaned = cleaned.replace(/\s+(Series|Show|Season)$/i, '');
 
     // Clean up extra spaces
-    cleaned = cleaned.replace(/\s+/g, " ").trim();
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
 
     return cleaned;
   }

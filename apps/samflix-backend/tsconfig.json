@@ -2,6 +2,7 @@
   "extends": "@samflix/tsconfig/node.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "outDir": "./dist",
     "rootDir": "./src",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true
