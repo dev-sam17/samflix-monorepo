@@ -6,6 +6,7 @@ node_modules
 apps/*/node_modules
 packages/*/node_modules
 
+
 apps/*/package-lock.json
 packages/*/package-lock.json
 
@@ -14,6 +15,9 @@ packages/*/yarn.lock
 
 apps/*/pnpm-lock.yaml
 packages/*/pnpm-lock.yaml
+
+apps/*/*.tsbuildinfo
+packages/*/*.tsbuildinfo
 
 .env
 .env.local

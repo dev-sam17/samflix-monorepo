@@ -13,8 +13,7 @@
     },
     "build": {
       "dependsOn": [
-        "^build",
-        "^prisma:generate"
+        "^build"
       ],
       "outputs": [
         "dist/**",
