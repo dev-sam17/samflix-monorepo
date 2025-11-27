@@ -22,8 +22,8 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
+        # with:
+        #   version: 10
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -76,13 +76,13 @@ jobs:
             cd ${{ secrets.HOMELAB_PROJECT_PATH }}
 
             echo "Updating BACKEND_TAG in .env to ${{ github.sha }}..."
-            sed -i 's/^BACKEND_TAG=.*/BACKEND_TAG=${{ github.sha }}/' .env
+            sed -i 's/^BACKEND_TAG=.*/BACKEND_TAG=${{ github.sha }}/' .env.production
 
             echo "Pulling image..."
-            docker compose pull backend
+            docker compose -f compose.prod.yml pull backend
 
             echo "Recreating container..."
-            docker compose up -d backend
+            docker compose -f compose.prod.yml up -d backend
 
             echo "Pruning old images..."
             docker image prune -f
