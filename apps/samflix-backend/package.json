@@ -26,7 +26,8 @@
     "morgan": "^1.10.0",
     "node-cron": "^4.0.7",
     "zod": "^4.0.14",
-    "cross-env": "^7.0.3"
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.5.0"
   },
   "devDependencies": {
     "@samflix/eslint-config": "workspace:*",
