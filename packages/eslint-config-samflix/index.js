@@ -21,6 +21,16 @@ export default function createConfig(options = {}) {
           { argsIgnorePattern: "^_" },
         ],
         "@typescript-eslint/no-explicit-any": "warn",
+        "@typescript-eslint/explicit-function-return-type": [
+          "error",
+          {
+            allowExpressions: true,
+            allowTypedFunctionExpressions: true,
+            allowHigherOrderFunctions: true,
+            allowDirectConstAssertionInArrowFunctions: true,
+          },
+        ],
+        "@typescript-eslint/explicit-module-boundary-types": "error",
         "no-console": ["warn", { allow: ["warn", "error", "log"] }],
       },
     },
