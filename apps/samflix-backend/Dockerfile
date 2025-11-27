@@ -24,13 +24,19 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy only built backend
-COPY --from=builder /app/apps/samflix-backend/dist ./dist
-COPY --from=builder /app/apps/samflix-backend/package.json ./
+# Copy monorepo structure needed for pnpm workspace
+COPY --from=builder /app/pnpm-lock.yaml /app/pnpm-workspace.yaml /app/package.json ./
+COPY --from=builder /app/apps/samflix-backend/package.json ./apps/samflix-backend/
+COPY --from=builder /app/packages/prisma-client-for-samflix/package.json ./packages/prisma-client-for-samflix/
 
-# Install only prod deps for backend
+# Install only prod deps
 RUN corepack enable \
-    && pnpm install --prod --filter @samflix/backend...
+    && pnpm install --prod --frozen-lockfile --filter @samflix/backend...
+
+# Copy built files
+COPY --from=builder /app/apps/samflix-backend/dist ./apps/samflix-backend/dist
+COPY --from=builder /app/packages/prisma-client-for-samflix/dist ./packages/prisma-client-for-samflix/dist
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 EXPOSE 3000
-CMD ["node", "dist/index.js"]
+CMD ["node", "apps/samflix-backend/dist/index.js"]
