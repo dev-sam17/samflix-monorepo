@@ -36,7 +36,7 @@ RUN corepack enable \
 # Copy built files
 COPY --from=builder /app/apps/samflix-backend/dist ./apps/samflix-backend/dist
 COPY --from=builder /app/packages/prisma-client-for-samflix/dist ./packages/prisma-client-for-samflix/dist
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/packages/prisma-client-for-samflix/src/generated ./packages/prisma-client-for-samflix/src/generated
 
 EXPOSE 3000
 CMD ["node", "apps/samflix-backend/dist/index.js"]
