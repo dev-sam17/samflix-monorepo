@@ -16,6 +16,7 @@
     "@samflix/eslint-config": "workspace:*",
     "@samflix/prettier-config": "workspace:*",
     "@samflix/tsconfig": "workspace:*",
+    "@types/node": "^22.0.0",
     "prisma": "^6.19.0"
   },
   "prettier": "@samflix/prettier-config",
