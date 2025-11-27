@@ -21,7 +21,7 @@ export default function createConfig(options = {}) {
           { argsIgnorePattern: "^_" },
         ],
         "@typescript-eslint/no-explicit-any": "warn",
-        "no-console": ["warn", { allow: ["warn", "error"] }],
+        "no-console": ["warn", { allow: ["warn", "error", "log"] }],
       },
     },
     {
