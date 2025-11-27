@@ -9,8 +9,11 @@ RUN corepack enable
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json .npmrc ./
 COPY apps/samflix-backend ./apps/samflix-backend
 COPY packages/prisma-client-for-samflix ./packages/prisma-client-for-samflix
+COPY packages/tsconfig ./packages/tsconfig
+COPY packages/eslint-config-samflix ./packages/eslint-config-samflix
+COPY packages/prettier-config ./packages/prettier-config
 
-RUN pnpm install
+RUN pnpm install --no-frozen-lockfile
 
 # Build Prisma client + backend
 RUN pnpm turbo run prisma:generate --filter=@samflix/prisma-client
