@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+  backend:
+    image: ghcr.io/YOUR_GH_USERNAME/samflix-backend:${BACKEND_TAG}
+    container_name: samflix-backend-monorepo
+    networks_mode: "host"
+    env_file:
+      - .env.production
+    dns:
+    # cloudfare dns to access tmdb api 
+      - 1.1.1.1
+      - 1.0.0.1
+    volumes:
+    # add your media paths here
+    restart: unless-stopped
