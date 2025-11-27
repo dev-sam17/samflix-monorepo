@@ -242,7 +242,7 @@ class SeriesController {
   };
 
   // Helper method to group episodes into seasons
-  private groupEpisodesIntoSeasons(episodes: any[]) {
+  private groupEpisodesIntoSeasons(episodes: any[]): any[] {
     const seasonsMap = new Map<number, any>();
 
     episodes.forEach((episode) => {

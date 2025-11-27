@@ -1,4 +1,5 @@
 // Script to empty all models from the database
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import 'dotenv/config';
 import { prisma } from '@samflix/prisma-client';
 

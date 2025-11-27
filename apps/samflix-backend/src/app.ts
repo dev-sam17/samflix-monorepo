@@ -30,7 +30,7 @@ import { DiskScannerService } from './services/storage/disk-scanner.service';
 const app = express();
 
 // Initialize Prisma Client
-export const prisma = new PrismaClient();
+export const prisma: PrismaClient = new PrismaClient();
 // export const TranscodeStatus = TranscodeStatus;
 
 // Middleware

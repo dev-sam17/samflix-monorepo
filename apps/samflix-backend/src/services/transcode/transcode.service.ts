@@ -1,5 +1,5 @@
-import { prisma } from "../../app";
-import type { TranscodeStatusType } from "../../types/media.types";
+import { prisma } from '../../app';
+import type { TranscodeStatusType } from '../../types/media.types';
 
 class TranscodeService {
   /**
@@ -8,7 +8,7 @@ class TranscodeService {
    * @param status The new transcode status
    * @returns The updated movie
    */
-  async updateMovieTranscodeStatus(id: string, status: TranscodeStatusType) {
+  async updateMovieTranscodeStatus(id: string, status: TranscodeStatusType): Promise<any> {
     try {
       const movie = await prisma.movie.findUnique({
         where: { id },
@@ -23,7 +23,7 @@ class TranscodeService {
         data: { transcodeStatus: status },
       });
     } catch (error) {
-      console.error("Error updating movie transcode status:", error);
+      console.error('Error updating movie transcode status:', error);
       throw error;
     }
   }
@@ -34,7 +34,7 @@ class TranscodeService {
    * @param status The new transcode status
    * @returns The updated episode
    */
-  async updateEpisodeTranscodeStatus(id: string, status: TranscodeStatusType) {
+  async updateEpisodeTranscodeStatus(id: string, status: TranscodeStatusType): Promise<any> {
     try {
       const episode = await prisma.episode.findUnique({
         where: { id },
@@ -49,7 +49,7 @@ class TranscodeService {
         data: { transcodeStatus: status },
       });
     } catch (error) {
-      console.error("Error updating episode transcode status:", error);
+      console.error('Error updating episode transcode status:', error);
       throw error;
     }
   }
@@ -60,10 +60,7 @@ class TranscodeService {
    * @param status The new transcode status
    * @returns Object containing updated series and episodes
    */
-  async updateSeriesTranscodeStatus(
-    seriesId: string,
-    status: TranscodeStatusType
-  ) {
+  async updateSeriesTranscodeStatus(seriesId: string, status: TranscodeStatusType): Promise<any> {
     try {
       // Use Prisma transaction to ensure atomicity
       const result = await prisma.$transaction(async (tx) => {
@@ -120,7 +117,7 @@ class TranscodeService {
 
       return result;
     } catch (error) {
-      console.error("Error updating series transcode status:", error);
+      console.error('Error updating series transcode status:', error);
       throw error;
     }
   }
@@ -130,7 +127,7 @@ class TranscodeService {
    * @param status The transcode status to filter by
    * @returns Object containing movies and episodes with the specified status
    */
-  async getItemsByTranscodeStatus(status: TranscodeStatusType) {
+  async getItemsByTranscodeStatus(status: TranscodeStatusType): Promise<any> {
     try {
       const movies = await prisma.movie.findMany({
         where: { transcodeStatus: status },
@@ -143,7 +140,7 @@ class TranscodeService {
 
       return { movies, episodes };
     } catch (error) {
-      console.error("Error getting items by transcode status:", error);
+      console.error('Error getting items by transcode status:', error);
       throw error;
     }
   }
@@ -153,7 +150,7 @@ class TranscodeService {
    * @param status The transcode status to filter by
    * @returns Array of movies with the specified status
    */
-  async getMoviesByTranscodeStatus(status: TranscodeStatusType) {
+  async getMoviesByTranscodeStatus(status: TranscodeStatusType): Promise<any[]> {
     try {
       const movies = await prisma.movie.findMany({
         where: { transcodeStatus: status },
@@ -161,7 +158,7 @@ class TranscodeService {
 
       return movies;
     } catch (error) {
-      console.error("Error getting movies by transcode status:", error);
+      console.error('Error getting movies by transcode status:', error);
       throw error;
     }
   }
@@ -171,7 +168,7 @@ class TranscodeService {
    * @param status The transcode status to filter by
    * @returns Array of episodes with the specified status
    */
-  async getEpisodesByTranscodeStatus(status: TranscodeStatusType) {
+  async getEpisodesByTranscodeStatus(status: TranscodeStatusType): Promise<any[]> {
     try {
       const episodes = await prisma.episode.findMany({
         where: { transcodeStatus: status },
@@ -179,7 +176,7 @@ class TranscodeService {
 
       return episodes;
     } catch (error) {
-      console.error("Error getting episodes by transcode status:", error);
+      console.error('Error getting episodes by transcode status:', error);
       throw error;
     }
   }
@@ -188,7 +185,7 @@ class TranscodeService {
    * Get comprehensive transcode statistics for all media
    * @returns Object containing counts for each transcode status
    */
-  async getTranscodeStats() {
+  async getTranscodeStats(): Promise<any> {
     try {
       // Use Prisma transaction to ensure consistent data
       const stats = await prisma.$transaction(async (tx) => {
@@ -266,7 +263,7 @@ class TranscodeService {
       const totalItems = stats.totalMovies + stats.totalEpisodes + stats.totalSeries;
 
       // Calculate percentages
-      const calculatePercentage = (count: number, total: number) => 
+      const calculatePercentage = (count: number, total: number): number =>
         total > 0 ? Math.round((count / total) * 100 * 100) / 100 : 0;
 
       return {
@@ -317,7 +314,7 @@ class TranscodeService {
         lastUpdated: new Date().toISOString(),
       };
     } catch (error) {
-      console.error("Error getting transcode statistics:", error);
+      console.error('Error getting transcode statistics:', error);
       throw error;
     }
   }

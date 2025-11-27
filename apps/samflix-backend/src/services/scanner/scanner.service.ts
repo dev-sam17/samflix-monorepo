@@ -18,9 +18,9 @@ class ScannerService {
    * @param progressCallback Optional callback function to report progress
    * @returns A summary of the scan results
    */
-  async scanAll(config: ScannerConfig, progressCallback?: ProgressCallback) {
+  async scanAll(config: ScannerConfig, progressCallback?: ProgressCallback): Promise<any> {
     try {
-      const reportProgress = (status: string, progress: number, details?: any) => {
+      const reportProgress = (status: string, progress: number, details?: any): void => {
         console.log(`${status}: ${progress}%${details ? ` - ${JSON.stringify(details)}` : ''}`);
         if (progressCallback) {
           progressCallback(status, progress, details);
@@ -198,7 +198,7 @@ class ScannerService {
     }
   }
 
-  private async scanMovieDirectory(directoryPath: string) {
+  private async scanMovieDirectory(directoryPath: string): Promise<void> {
     const files = await this.getMediaFiles(directoryPath);
 
     for (const file of files) {
@@ -286,7 +286,7 @@ class ScannerService {
     }
   }
 
-  private async scanSeriesDirectory(directoryPath: string) {
+  private async scanSeriesDirectory(directoryPath: string): Promise<void> {
     const files = await this.getMediaFiles(directoryPath);
 
     // Track unparseable files by series folder to group them
@@ -510,7 +510,7 @@ class ScannerService {
     fileName: string,
     filePath: string,
     possibleMatches: (TMDBMovieResult | TMDBTVResult)[]
-  ) {
+  ): Promise<void> {
     // Convert matches to a plain object array for Prisma JSON compatibility
     const matchesForDb = possibleMatches.map((match) => ({ ...match }));
     try {
@@ -555,7 +555,7 @@ class ScannerService {
    * @param selectedId The TMDB ID of the selected media
    * @returns The updated conflict
    */
-  async resolveConflict(conflictId: string, selectedId: number) {
+  async resolveConflict(conflictId: string, selectedId: number): Promise<any> {
     try {
       // Get the conflict details first
       const conflictDetails = await prisma.scanningConflict.findUnique({
@@ -714,7 +714,7 @@ class ScannerService {
    * @param conflictId The ID of the conflict to delete
    * @returns A success message
    */
-  async deleteConflict(conflictId: string) {
+  async deleteConflict(conflictId: string): Promise<{ message: string }> {
     try {
       // Check if the conflict exists
       const conflict = await prisma.scanningConflict.findUnique({
@@ -741,7 +741,7 @@ class ScannerService {
    * Deletes all unresolved scanning conflicts from the database
    * @returns A success message with the count of deleted conflicts
    */
-  async deleteAllConflicts() {
+  async deleteAllConflicts(): Promise<{ message: string; count: number }> {
     try {
       // Delete all unresolved conflicts
       const result = await prisma.scanningConflict.deleteMany({
@@ -763,7 +763,7 @@ class ScannerService {
    * This is called after scanning to clean up conflicts that have been resolved
    * @returns A success message with the count of deleted conflicts
    */
-  private async deleteResolvedConflicts() {
+  private async deleteResolvedConflicts(): Promise<void> {
     try {
       // Delete all resolved conflicts
       const result = await prisma.scanningConflict.deleteMany({
@@ -771,10 +771,6 @@ class ScannerService {
       });
 
       console.log(`Deleted ${result.count} resolved conflicts`);
-      return {
-        message: 'Resolved conflicts deleted successfully',
-        count: result.count,
-      };
     } catch (error) {
       console.error('Error deleting resolved conflicts:', error);
       throw error;
@@ -786,9 +782,9 @@ class ScannerService {
    * (entries that exist in the database but the files no longer exist on disk)
    * @param progressCallback Optional callback function to report progress
    */
-  private async cleanupOrphanedEntries(progressCallback?: ProgressCallback) {
+  private async cleanupOrphanedEntries(progressCallback?: ProgressCallback): Promise<void> {
     try {
-      const reportProgress = (status: string, progress: number, details?: any) => {
+      const reportProgress = (status: string, progress: number, details?: any): void => {
         console.log(`${status}: ${progress}%${details ? ` - ${JSON.stringify(details)}` : ''}`);
         if (progressCallback) {
           progressCallback(status, progress, details);
@@ -878,13 +874,7 @@ class ScannerService {
         }
       }
 
-      reportProgress('Cleanup completed', 95);
-
-      return {
-        removedMovies: missingMovies.length,
-        removedEpisodes: missingEpisodes.length,
-        removedSeries: emptySeries.length,
-      };
+      reportProgress('Cleanup completed', 100);
     } catch (error) {
       console.error('Error cleaning up orphaned entries:', error);
       throw error;
@@ -909,7 +899,7 @@ class ScannerService {
    * Checks for movies that are in the database but no longer exist on disk
    * @returns An array of movies that are missing from disk
    */
-  private async checkForDeletedMovies() {
+  private async checkForDeletedMovies(): Promise<any[]> {
     try {
       // Get all movies from the database
       const movies = await prisma.movie.findMany({
@@ -942,7 +932,7 @@ class ScannerService {
    * Checks for episodes that are in the database but no longer exist on disk
    * @returns An array of episodes that are missing from disk
    */
-  private async checkForDeletedEpisodes() {
+  private async checkForDeletedEpisodes(): Promise<any[]> {
     try {
       // Get all episodes from the database
       const episodes = await prisma.episode.findMany({
@@ -983,7 +973,7 @@ class ScannerService {
    * @param movieId The ID of the movie to remove
    * @returns A success message
    */
-  private async removeDeletedMovie(movieId: string) {
+  private async removeDeletedMovie(movieId: string): Promise<void> {
     try {
       const movie = await prisma.movie.findUnique({
         where: { id: movieId },
@@ -1003,7 +993,7 @@ class ScannerService {
         where: { id: movieId },
       });
 
-      return { message: 'Movie removed successfully' };
+      console.log(`Removed deleted movie: ${movie.title}`);
     } catch (error) {
       console.error('Error removing deleted movie:', error);
       throw error;
@@ -1015,7 +1005,7 @@ class ScannerService {
    * @param episodeId The ID of the episode to remove
    * @returns A success message
    */
-  private async removeDeletedEpisode(episodeId: string) {
+  private async removeDeletedEpisode(episodeId: string): Promise<void> {
     try {
       const episode = await prisma.episode.findUnique({
         where: { id: episodeId },
@@ -1035,7 +1025,7 @@ class ScannerService {
         where: { id: episodeId },
       });
 
-      return { message: 'Episode removed successfully' };
+      console.log(`Removed deleted episode: ${episode.title}`);
     } catch (error) {
       console.error('Error removing deleted episode:', error);
       throw error;

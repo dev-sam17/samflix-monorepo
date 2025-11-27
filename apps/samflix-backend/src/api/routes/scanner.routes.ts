@@ -74,7 +74,7 @@ const scanHandler: AsyncRouteHandler = async (_req, res) => {
     res.write(`data: ${JSON.stringify({ status: 'Starting scan', progress: 0 })}\n\n`);
 
     // Define progress callback
-    const progressCallback = (status: string, progress: number, details?: unknown) => {
+    const progressCallback = (status: string, progress: number, details?: unknown): void => {
       const data = JSON.stringify({ status, progress, details });
       res.write(`data: ${data}\n\n`);
     };

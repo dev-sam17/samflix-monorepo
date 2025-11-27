@@ -19,7 +19,9 @@ export interface CacheInvalidationOptions {
  * Middleware to invalidate cache after successful data modifications
  * @param options Cache invalidation options
  */
-export const invalidateCache = (options: CacheInvalidationOptions = {}) => {
+export const invalidateCache = (
+  options: CacheInvalidationOptions = {}
+): ((req: Request, res: Response, next: NextFunction) => Promise<void>) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     // Store the original end method
     const originalEnd = res.end;
@@ -80,7 +82,9 @@ async function performCacheInvalidation(
  * Create a router with automatic cache invalidation for data-modifying routes
  * @param options Default cache invalidation options
  */
-export function createCacheInvalidatingRouter(options: CacheInvalidationOptions = {}) {
+export function createCacheInvalidatingRouter(
+  options: CacheInvalidationOptions = {}
+): express.Router {
   const router = express.Router();
 
   // Store original methods
@@ -122,7 +126,7 @@ export function createCacheInvalidatingRouter(options: CacheInvalidationOptions 
 export function createSmartCacheRouter(
   cacheOptions: any = {},
   invalidationOptions: CacheInvalidationOptions = {}
-) {
+): express.Router {
   // First create a router with GET caching
   const router = createCachedRouter(cacheOptions);
 

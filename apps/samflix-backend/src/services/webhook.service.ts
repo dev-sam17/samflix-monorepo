@@ -12,7 +12,7 @@ export class WebhookService {
    * @param type Event type
    * @param data Event data
    */
-  public async processWebhookEvent(type: string, data: any): Promise<void> {
+  public async processWebhookEvent(type: string, data: Record<string, any>): Promise<void> {
     const clerkId = data.id;
     const email = data.email_addresses?.[0]?.email_address;
     const name = [data.first_name, data.last_name].filter(Boolean).join(' ') || null;
