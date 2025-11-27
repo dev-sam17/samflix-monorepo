@@ -7,7 +7,7 @@
     "build": "tsc",
     "start": "cross-env NODE_ENV=production node dist/app.js",
     "dev": "cross-env NODE_ENV=development tsx watch src/app.ts",
-    "lint": "eslint *"
+    "lint": "eslint ."
   },
   "keywords": [],
   "author": "Saurav Kumar",
@@ -34,6 +34,7 @@
     "@types/morgan": "^1.9.9",
     "@types/node": "^22.0.0",
     "@types/node-cron": "^3.0.11",
+    "globals": "^16.2.0",
     "tsx": "^4.19.2"
   },
   "prettier": "@samflix/prettier-config",
