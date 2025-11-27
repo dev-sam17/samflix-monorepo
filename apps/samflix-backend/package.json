@@ -32,6 +32,7 @@
     "@samflix/tsconfig": "workspace:*",
     "@types/cors": "^2.8.18",
     "@types/morgan": "^1.9.9",
+    "@types/node": "^22.0.0",
     "@types/node-cron": "^3.0.11",
     "tsx": "^4.19.2"
   },
