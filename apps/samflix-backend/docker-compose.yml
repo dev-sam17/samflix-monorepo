@@ -2,9 +2,9 @@ version: "3.9"
 
 services:
   backend:
-    image: ghcr.io/YOUR_GH_USERNAME/samflix-backend:${BACKEND_TAG}
+    image: ghcr.io/dev-sam17/samflix-backend:${BACKEND_TAG:-latest}
     container_name: samflix-backend-monorepo
-    networks_mode: "host"
+    network_mode: "host"
     env_file:
       - .env.production
     dns:
