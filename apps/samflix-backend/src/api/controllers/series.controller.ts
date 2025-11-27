@@ -37,7 +37,7 @@ class SeriesController {
       if (search) {
         where.OR = [
           { title: { contains: search, mode: 'insensitive' } },
-          { overview: { contains: search, mode: 'insensitive' } }
+          { overview: { contains: search, mode: 'insensitive' } },
         ];
       }
 
@@ -52,12 +52,9 @@ class SeriesController {
         orderBy: { [sortBy]: sortOrder },
         include: {
           episodes: {
-            orderBy: [
-              { seasonNumber: 'asc' },
-              { episodeNumber: 'asc' }
-            ]
-          }
-        }
+            orderBy: [{ seasonNumber: 'asc' }, { episodeNumber: 'asc' }],
+          },
+        },
       });
 
       const totalPages = Math.ceil(total / limit);
@@ -65,14 +62,14 @@ class SeriesController {
       const response: PaginatedResponse<any> = {
         data: series.map((s: any) => ({
           ...s,
-          seasons: this.groupEpisodesIntoSeasons(s.episodes)
+          seasons: this.groupEpisodesIntoSeasons(s.episodes),
         })),
         meta: {
           total,
           page,
           limit,
-          totalPages
-        }
+          totalPages,
+        },
       };
 
       res.json(response);
@@ -80,7 +77,7 @@ class SeriesController {
       console.error('Error fetching series:', error);
       res.status(500).json({ error: 'Failed to fetch series' });
     }
-  }
+  };
 
   getSeriesById: AsyncRequestHandler = async (req, res) => {
     try {
@@ -89,12 +86,9 @@ class SeriesController {
         where: { id },
         include: {
           episodes: {
-            orderBy: [
-              { seasonNumber: 'asc' },
-              { episodeNumber: 'asc' }
-            ]
-          }
-        }
+            orderBy: [{ seasonNumber: 'asc' }, { episodeNumber: 'asc' }],
+          },
+        },
       });
 
       if (!series) {
@@ -105,7 +99,7 @@ class SeriesController {
       // Transform the data to group episodes by season
       const seriesWithSeasons = {
         ...series,
-        seasons: this.groupEpisodesIntoSeasons(series.episodes)
+        seasons: this.groupEpisodesIntoSeasons(series.episodes),
       };
 
       res.json(seriesWithSeasons);
@@ -114,7 +108,7 @@ class SeriesController {
       console.error('Error fetching series:', error);
       res.status(500).json({ error: 'Failed to fetch series' });
     }
-  }
+  };
 
   searchSeries: AsyncRequestHandler = async (req, res) => {
     try {
@@ -128,30 +122,27 @@ class SeriesController {
         where: {
           OR: [
             { title: { contains: query, mode: 'insensitive' } },
-            { genres: { hasSome: [query] } }
-          ]
+            { genres: { hasSome: [query] } },
+          ],
         },
         orderBy: { title: 'asc' },
         include: {
           episodes: {
-            orderBy: [
-              { seasonNumber: 'asc' },
-              { episodeNumber: 'asc' }
-            ]
-          }
-        }
+            orderBy: [{ seasonNumber: 'asc' }, { episodeNumber: 'asc' }],
+          },
+        },
       });
       res.json(series);
     } catch (error) {
       console.error('Error searching series:', error);
       res.status(500).json({ error: 'Failed to search series' });
     }
-  }
+  };
 
   getEpisodesBySeason: AsyncRequestHandler = async (req, res) => {
     try {
       const { seriesId, seasonNumber } = req.params;
-      const seasonNum = parseInt(seasonNumber);
+      const seasonNum = parseInt(seasonNumber!);
 
       if (isNaN(seasonNum)) {
         res.status(400).json({ error: 'Invalid season number' });
@@ -161,9 +152,9 @@ class SeriesController {
       const episodes = await prisma.episode.findMany({
         where: {
           seriesId,
-          seasonNumber: seasonNum
+          seasonNumber: seasonNum,
         },
-        orderBy: { episodeNumber: 'asc' }
+        orderBy: { episodeNumber: 'asc' },
       });
 
       if (!episodes.length) {
@@ -189,30 +180,27 @@ class SeriesController {
 
       const series = await prisma.tvSeries.findMany({
         where: {
-          genres: { hasSome: [genre] }
+          genres: { hasSome: [genre] },
         },
         orderBy: { title: 'asc' },
         include: {
           episodes: {
-            orderBy: [
-              { seasonNumber: 'asc' },
-              { episodeNumber: 'asc' }
-            ]
-          }
-        }
+            orderBy: [{ seasonNumber: 'asc' }, { episodeNumber: 'asc' }],
+          },
+        },
       });
       res.json(series);
     } catch (error) {
       console.error('Error fetching series by genre:', error);
       res.status(500).json({ error: 'Failed to fetch series by genre' });
     }
-  }
+  };
 
   getEpisode: AsyncRequestHandler = async (req, res) => {
     try {
       const { seriesId, seasonNumber, episodeNumber } = req.params;
-      const seasonNum = parseInt(seasonNumber);
-      const episodeNum = parseInt(episodeNumber);
+      const seasonNum = parseInt(seasonNumber!);
+      const episodeNum = parseInt(episodeNumber!);
 
       if (isNaN(seasonNum) || isNaN(episodeNum)) {
         res.status(400).json({ error: 'Invalid season or episode number' });
@@ -223,8 +211,8 @@ class SeriesController {
         where: {
           seriesId,
           seasonNumber: seasonNum,
-          episodeNumber: episodeNum
-        }
+          episodeNumber: episodeNum,
+        },
       });
 
       if (!episode) {
@@ -237,14 +225,14 @@ class SeriesController {
       console.error('Error fetching episode:', error);
       res.status(500).json({ error: 'Failed to fetch episode' });
     }
-  }
+  };
 
   getAllGenres: AsyncRequestHandler = async (_req, res) => {
     try {
       const series = await prisma.tvSeries.findMany({
-        select: { genres: true }
+        select: { genres: true },
       });
-      
+
       const genres = Array.from(new Set(series.flatMap((s: any) => s.genres))).sort();
       res.json(genres);
     } catch (error) {
@@ -256,17 +244,17 @@ class SeriesController {
   // Helper method to group episodes into seasons
   private groupEpisodesIntoSeasons(episodes: any[]) {
     const seasonsMap = new Map<number, any>();
-    
-    episodes.forEach(episode => {
+
+    episodes.forEach((episode) => {
       if (!seasonsMap.has(episode.seasonNumber)) {
         seasonsMap.set(episode.seasonNumber, {
           seasonNumber: episode.seasonNumber,
-          episodes: []
+          episodes: [],
         });
       }
       seasonsMap.get(episode.seasonNumber).episodes.push(episode);
     });
-    
+
     return Array.from(seasonsMap.values()).sort((a, b) => a.seasonNumber - b.seasonNumber);
   }
 }

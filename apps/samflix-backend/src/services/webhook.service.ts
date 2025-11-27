@@ -1,4 +1,4 @@
-import { PrismaClient } from "@dev-sam17/prisma-client-for-samflix";
+import { PrismaClient } from '@samflix/prisma-client';
 
 export class WebhookService {
   private prisma: PrismaClient;
@@ -15,15 +15,14 @@ export class WebhookService {
   public async processWebhookEvent(type: string, data: any): Promise<void> {
     const clerkId = data.id;
     const email = data.email_addresses?.[0]?.email_address;
-    const name =
-      [data.first_name, data.last_name].filter(Boolean).join(" ") || null;
+    const name = [data.first_name, data.last_name].filter(Boolean).join(' ') || null;
     const imageUrl = data.image_url || null;
 
     switch (type) {
-      case "user.created":
+      case 'user.created':
         await this.createUser(clerkId, email, name, imageUrl);
         break;
-      case "user.updated":
+      case 'user.updated':
         await this.updateUser(clerkId, email, name, imageUrl);
         break;
       default:
@@ -57,9 +56,7 @@ export class WebhookService {
       },
     });
 
-    console.log(
-      `Created user with Clerk ID ${clerkId} and initialized UserStats`
-    );
+    console.log(`Created user with Clerk ID ${clerkId} and initialized UserStats`);
   }
 
   /**
