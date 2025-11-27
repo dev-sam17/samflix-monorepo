@@ -15,8 +15,7 @@ COPY packages/prettier-config ./packages/prettier-config
 
 RUN pnpm install --no-frozen-lockfile
 
-# Build Prisma client + backend
-RUN pnpm turbo run prisma:generate --filter=@samflix/prisma-client
+# Build backend (includes Prisma client generation)
 RUN pnpm turbo run build --filter=@samflix/backend
 
 # ---- Runtime image ----
