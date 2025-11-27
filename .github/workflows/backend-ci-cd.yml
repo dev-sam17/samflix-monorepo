@@ -32,7 +32,7 @@ jobs:
           cache: pnpm
 
       - name: Install deps
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
 
       - name: Run backend build (sanity check)
         run: pnpm turbo run build --filter=@samflix/backend...
@@ -51,8 +51,8 @@ jobs:
           file: ./apps/samflix-backend/Dockerfile
           push: true
           tags: |
-            ghcr.io/YOUR_GH_USERNAME/samflix-backend:${{ github.sha }}
-            ghcr.io/YOUR_GH_USERNAME/samflix-backend:latest
+            ghcr.io/dev-sam17/samflix-backend:${{ github.sha }}
+            ghcr.io/dev-sam17/samflix-backend:latest
 
   deploy:
     runs-on: ubuntu-latest
@@ -63,7 +63,7 @@ jobs:
         uses: tailscale/github-action@main
         with:
           authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
-          
+
       - name: Deploy to homelab via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:

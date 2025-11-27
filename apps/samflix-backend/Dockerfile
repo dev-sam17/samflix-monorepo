@@ -10,7 +10,7 @@ COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json .npmrc ./
 COPY apps/samflix-backend ./apps/samflix-backend
 COPY packages/prisma-client-for-samflix ./packages/prisma-client-for-samflix
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 # Build Prisma client + backend
 RUN pnpm turbo run prisma:generate --filter=@samflix/prisma-client
