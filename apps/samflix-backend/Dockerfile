@@ -1,5 +1,5 @@
 # ---- Builder image ----
-FROM node:22.11.1-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Install pnpm
@@ -19,7 +19,7 @@ RUN pnpm install --no-frozen-lockfile
 RUN pnpm turbo run build --filter=@samflix/backend
 
 # ---- Runtime image ----
-FROM node:22.11.1-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
