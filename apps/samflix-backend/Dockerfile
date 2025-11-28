@@ -39,4 +39,4 @@ COPY --from=builder /app/packages/prisma-client-for-samflix/dist ./packages/pris
 COPY --from=builder /app/packages/prisma-client-for-samflix/src/generated ./packages/prisma-client-for-samflix/src/generated
 
 EXPOSE 3000
-CMD ["node", "apps/samflix-backend/dist/index.js"]
+CMD ["node", "apps/samflix-backend/dist/app.js"]
