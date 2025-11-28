@@ -75,6 +75,9 @@ jobs:
             set -e
             cd ${{ secrets.HOMELAB_PROJECT_PATH }}
 
+            echo "Logging in to GHCR..."
+            echo "${{ secrets.GH_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
             echo "Updating BACKEND_TAG in .env to ${{ github.sha }}..."
             sed -i 's/^BACKEND_TAG=.*/BACKEND_TAG=${{ github.sha }}/' .env.production
 
