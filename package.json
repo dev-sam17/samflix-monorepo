@@ -9,6 +9,7 @@
     "dev": "turbo run dev",
     "dev:frontend": "turbo run dev --filter=@samflix/frontend",
     "dev:backend": "turbo run dev --filter=@samflix/backend",
+    "start": "turbo run start --filter=@samflix/backend",
     "build": "turbo run build --summarize",
     "build:frontend": "turbo run build --filter=@samflix/frontend --summarize",
     "build:backend": "turbo run build --filter=@samflix/backend --summarize",

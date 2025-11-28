@@ -12,7 +12,6 @@
   "keywords": [],
   "author": "Saurav Kumar",
   "license": "ISC",
-  "type": "module",
   "dependencies": {
     "@clerk/express": "^1.7.1",
     "@samflix/prisma-client": "workspace:*",
